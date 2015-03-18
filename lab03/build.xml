@@ -1,0 +1,23 @@
+<project name="lab03" basedir=".">
+	<property name="src" location="src" />
+	<property name="build" location="build" />
+
+	<target name="init">
+		<mkdir dir="${build}" />
+		<mkdir dir="build/classes" />
+	</target>
+
+	<target name="clean">
+		<delete dir="build" />
+	</target>
+
+	<target name="compile" depends="clean, init">
+		<javac srcdir="src" destdir="build/classes" />
+	</target>
+
+	<target name="run" depends="compile">
+		<java classname="lab03.Program" classpath="build/classes" fork="false" spawn="false">
+			<arg value="${arg0}" />
+		</java>
+	</target>
+</project>
