@@ -1,0 +1,19 @@
+<project name="Debugger" basedir="." default="compile">
+	<target name="init" description="Create the build and classes folder">
+		<mkdir dir="build/classes" />
+	</target>
+
+	<target name="clean" description="Delete the .class files and the .jar">
+		<delete dir="build" />
+		<delete file="debugger.jar" />
+	</target>
+
+	<target name="compile" depends="clean, init" description="Generate the .jar">
+		<javac srcdir="src" destdir="build/classes" />
+		<jar destfile="debugger.jar" basedir="build/classes">
+			<manifest>
+				<attribute name="Main-Class" value="ist.meic.pa.DebuggerCLI" />
+			</manifest>
+		</jar>
+	</target>
+</project>
