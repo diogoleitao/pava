@@ -3,6 +3,7 @@ package lab02;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class Program {
 
 	public static void main(String[] args) {
 		Object result = new Object();
+		Field field;
 
 		System.out.println("Command:> ");
 
@@ -54,7 +56,6 @@ public class Program {
 					}
 				}
 			}
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
