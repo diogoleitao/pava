@@ -1,51 +1,24 @@
 package ist.meic.pa;
 
-import java.lang.reflect.Field;
+import ist.meic.pa.commands.Command;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
-/**
- * @author Diogo
- *
- */
 public class DebuggerCLI {
 
-	public static Object calledObject;
-
-	public static ArrayList<Field> objectFields;
-
-	public static ArrayList<Method> callStack;
-
-	@SuppressWarnings("serial")
-	public static ArrayList<String> commands = new ArrayList<String>() {
-		{
-			add("Abort");
-			add("Info");
-			add("Throw");
-			add("Return");
-			add("Get");
-			add("Set");
-			add("Retry");
-		}
-	};
-
-	/**
-	 * @param args
-	 * @throws NotFoundException
-	 * @throws CannotCompileException
-	 * @throws SecurityException
-	 * @throws NoSuchMethodException
-	 * @throws InvocationTargetException 
-	 * @throws IllegalArgumentException 
-	 * @throws IllegalAccessException 
-	 */
-	public static void main(String[] args) throws NotFoundException, CannotCompileException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public static void main(String[] args) throws NotFoundException,
+			CannotCompileException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
 		ClassPool pool = ClassPool.getDefault();
 		CtClass ctClass = pool.get(args[0]);
 
@@ -64,10 +37,57 @@ public class DebuggerCLI {
 		}
 	}
 
-	/**
-	 * @param ctClass
-	 */
 	public static void instrumentClass(CtClass ctClass) {
 
 	}
+	
+	public static void instantiateCommand() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+		BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
+		String args[] = buffer.readLine().split(" ");
+		
+		Class<?> c = Class.forName("ist.meic.pa.commands." + args[0]);
+		Command command = (Command) c.newInstance();
+		command.execute(args);
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
