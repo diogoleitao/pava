@@ -1,6 +1,6 @@
 package ist.meic.pa.commands;
 
-public class Retry implements Command {
+public class Retry implements ICommand {
 
 	@Override
 	public void execute(String[] args) {

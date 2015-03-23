@@ -1,4 +1,8 @@
 <project name="Debugger" basedir="." default="compile">
+	<path id="project-classpath">
+		<fileset dir="." includes="javassist.jar" />
+	</path>
+
 	<target name="init" description="Create the build and classes folder">
 		<mkdir dir="build/classes" />
 	</target>
@@ -9,7 +13,7 @@
 	</target>
 
 	<target name="compile" depends="clean, init" description="Generate the .jar">
-		<javac srcdir="src" destdir="build/classes" />
+		<javac srcdir="src" destdir="build/classes" classpathref="project-classpath" />
 		<jar destfile="debugger.jar" basedir="build/classes">
 			<manifest>
 				<attribute name="Main-Class" value="ist.meic.pa.DebuggerCLI" />

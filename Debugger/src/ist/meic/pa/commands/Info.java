@@ -2,7 +2,7 @@ package ist.meic.pa.commands;
 
 import java.util.ArrayList;
 
-public class Info implements Command {
+public class Info implements ICommand {
 
 	@Override
 	public void execute(String[] args) {

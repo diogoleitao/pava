@@ -1,5 +1,5 @@
 package ist.meic.pa.commands;
 
-public interface Command {
+public interface ICommand {
 	void execute(String[] args);
 }

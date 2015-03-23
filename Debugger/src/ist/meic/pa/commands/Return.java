@@ -1,6 +1,6 @@
 package ist.meic.pa.commands;
 
-public class Return implements Command {
+public class Return implements ICommand {
 
 	@Override
 	public void execute(String[] args) {

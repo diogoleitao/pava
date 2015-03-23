@@ -5,7 +5,7 @@ public class Program {
 	public static void main(String args[]) {
 		String classname = args[0];
 		try {
-			Class c = Class.forName("lab01." + classname);
+			Class<?> c = Class.forName("lab01." + classname);
 			Message m = (Message) c.newInstance();
 			m.say();
 		} catch (ClassNotFoundException e) {

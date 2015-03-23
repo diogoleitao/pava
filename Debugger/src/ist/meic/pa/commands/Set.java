@@ -1,6 +1,6 @@
 package ist.meic.pa.commands;
 
-public class Set implements Command {
+public class Set implements ICommand {
 
 	@Override
 	public void execute(String[] args) {

@@ -1,7 +1,5 @@
 package ist.meic.pa;
 
-import ist.meic.pa.commands.Command;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,10 +13,15 @@ import javassist.NotFoundException;
 
 public class DebuggerCLI {
 
-	public static void main(String[] args) throws NotFoundException,
-			CannotCompileException, NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
+	public static Command commands;
+
+	public static void main(String[] args) throws	NotFoundException,
+													CannotCompileException,
+													NoSuchMethodException,
+													SecurityException,
+													IllegalAccessException,
+													IllegalArgumentException,
+													InvocationTargetException {
 		ClassPool pool = ClassPool.getDefault();
 		CtClass ctClass = pool.get(args[0]);
 
@@ -40,54 +43,12 @@ public class DebuggerCLI {
 	public static void instrumentClass(CtClass ctClass) {
 
 	}
-	
-	public static void instantiateCommand() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+
+	public static void instantiateCommand() throws	IOException,
+													ClassNotFoundException,
+													InstantiationException,
+													IllegalAccessException {
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
-		String args[] = buffer.readLine().split(" ");
-		
-		Class<?> c = Class.forName("ist.meic.pa.commands." + args[0]);
-		Command command = (Command) c.newInstance();
-		command.execute(args);
+		buffer.readLine().split(" ");
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
