@@ -7,6 +7,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class Command {
+
+	private Exception exceptionThrown;
+
 	private Object calledObject = new Object();
 
 	private ArrayList<Field> objectFields = new ArrayList<Field>();
@@ -16,14 +19,15 @@ public class Command {
 	public Command() {
 	}
 
-	public Command(Object calledObject, ArrayList<Field> objectFields, ArrayList<Method> callStack) {
+	public Command(Object calledObject, ArrayList<Field> objectFields,
+			ArrayList<Method> callStack) {
 		this.calledObject = calledObject;
 		this.objectFields = objectFields;
 		this.callStack = callStack;
 	}
 
 	public void Abort() {
-
+		System.exit(0);
 	}
 
 	public void Info() {
@@ -34,20 +38,16 @@ public class Command {
 	}
 
 	public void Throw() throws Exception {
-		try {
-			callStack.get(0).invoke(null);
-		} catch (Exception e) {
-			throw e;
-		}
+		throw exceptionThrown;
 	}
 
 	public Object Return(Type returnValue) {
 		Method lastMethodCalled = callStack.get(0);
-		return lastMethodCalled; //THIS OBVIOUSLY MAKES NO SENSE
+		return lastMethodCalled; // THIS OBVIOUSLY MAKES NO SENSE
 	}
 
-	public Object Get(String fieldName) throws	IllegalArgumentException,
-												IllegalAccessException {
+	public Object Get(String fieldName) throws IllegalArgumentException,
+			IllegalAccessException {
 		for (Field field : objectFields) {
 			if (field.getName().equals(fieldName)) {
 				return field.get(calledObject);
@@ -56,8 +56,8 @@ public class Command {
 		return null;
 	}
 
-	public void Set(String fieldName, Object value) throws	IllegalArgumentException,
-															IllegalAccessException {
+	public void Set(String fieldName, Object value)
+			throws IllegalArgumentException, IllegalAccessException {
 		for (Field field : objectFields) {
 			if (field.getName().equals(fieldName)) {
 				field.set(calledObject, value);
@@ -68,7 +68,8 @@ public class Command {
 	public void Retry() {
 		try {
 			callStack.get(0).invoke(null);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
 			e.printStackTrace();
 		}
 	}

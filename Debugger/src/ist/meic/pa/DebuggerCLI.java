@@ -1,54 +1,64 @@
 package ist.meic.pa;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.Stack;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.NotFoundException;
+import javassist.CtMethod;
+import javassist.Loader;
 
 public class DebuggerCLI {
 
-	public static Command commands;
+	private static Stack<ObjectFieldValue> undoTrail = new Stack<ObjectFieldValue>();
+	private static CtClass toBeRun;
 
-	public static void main(String[] args) throws	NotFoundException,
-													CannotCompileException,
-													NoSuchMethodException,
-													SecurityException,
-													IllegalAccessException,
-													IllegalArgumentException,
-													InvocationTargetException {
+	public static void main(String[] args) throws Throwable {
+		// SETUP OBJECTS
 		ClassPool pool = ClassPool.getDefault();
-		CtClass ctClass = pool.get(args[0]);
+		pool.insertClassPath("./build/classes");
+		Loader classLoader = new Loader(pool);
+		toBeRun = pool.get(args[0]);
 
-		instrumentClass(ctClass);
+		// INSTRUMENT CLASS
+		instrumentClass();
 
-		Class<?> rtClass = ctClass.toClass();
-		Method main = rtClass.getMethod("main", args.getClass());
+		// EXECUTE MAIN METHOD
+		Class<?> runnableClass = classLoader.loadClass(args[0]);
+		Object tobeas = runnableClass.newInstance();
+		tobeas.getClass().getMethod("main", new Class[] { String[].class }).invoke(null, new Object[] { args });
+		startCLI();
+	}
 
-		String[] restArgs = new String[args.length - 2];
-		System.arraycopy(args, 2, restArgs, 0, restArgs.length);
-
-		try {
-			main.invoke(null, new Object[] { restArgs });
-		} catch (Exception e) {
-			System.out.println(e.getCause());
+	private static void instrumentClass() throws Throwable {
+		for (CtClass innerClass : toBeRun.getDeclaredClasses()) {
+			// SAVE STATE FOR COMMAND'S INFO METHOD
+			for (CtMethod method : innerClass.getDeclaredMethods()) {
+				try {
+					//method.insertBefore("int state0 = History.currentState");
+					method.insertAfter("System.out.println(\"woohoo!\");");
+				} catch (CannotCompileException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
-	public static void instrumentClass(CtClass ctClass) {
-
+	private static void storePrevious(Object object, String className, String fieldName, Object value) {
+		undoTrail.push(new ObjectFieldValue(object, className, fieldName, value));
 	}
 
-	public static void instantiateCommand() throws	IOException,
-													ClassNotFoundException,
-													InstantiationException,
-													IllegalAccessException {
-		BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
-		buffer.readLine().split(" ");
+	private static int currentState() {
+		return undoTrail.size();
+	}
+
+	private static void restoreState(int state) {
+		while (undoTrail.size() != state) {
+			undoTrail.pop().restore();
+		}
+	}
+
+	private static void startCLI() {
+		System.out.print("DebuggerCLI:> ");
 	}
 }
