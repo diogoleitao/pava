@@ -26,18 +26,26 @@ public class MyTranslator implements Translator {
 		try {
 			instrumentClass(cc);
 		} catch (Throwable e) {
-			e.printStackTrace();
+			System.out.println(e);
 		}
 	}
 
 	private void instrumentClass(CtClass ctClass) throws NotFoundException {
-		// SAVE STATE FOR COMMAND'S INFO METHOD
 		for (CtMethod method : ctClass.getDeclaredMethods()) {
-			try {
-				if (!method.getReturnType().getName().equals("void"))
-					method.addCatch("{ return (" + method.getReturnType().getName() + ") 0; }", pool.getCtClass("java.lang.Exception"));
-			} catch (CannotCompileException e) {
-				e.printStackTrace();
+			if (method.getName().equals("main")){
+				try {
+					method.addCatch("{ System.out.println($e); return; }", pool.getCtClass("java.lang.Exception"));
+				} catch (CannotCompileException e) {
+					e.printStackTrace();
+				}
+				
+			} else {
+				try {
+					if (!method.getReturnType().getName().equals("void"))
+						method.addCatch("{ throw $e; }", pool.getCtClass("java.lang.Exception"));
+				} catch (CannotCompileException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
