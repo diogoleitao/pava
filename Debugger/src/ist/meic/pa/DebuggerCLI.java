@@ -51,11 +51,11 @@ public class DebuggerCLI {
 				if (command.equals(""))
 					return;
 
+				int aritySize = input.length - 1;
 				if (input.length > 1) {
-					int length = input.length - 1;
-					args = new Object[length];
-					Object[] newArgs = new Object[length];
-					System.arraycopy(input, 1, newArgs, 0, length);
+					args = new Object[aritySize];
+					Object[] newArgs = new Object[aritySize];
+					System.arraycopy(input, 1, newArgs, 0, aritySize);
 					System.arraycopy(newArgs, 0, args, 0, newArgs.length);
 				}
 				// myLoader.getClass().getProtectionDomain().getPermissions().add(new RuntimePermission("exitVM")); --- SECURITY STUFF FOR SYSTEM.EXIT(0)
@@ -64,13 +64,14 @@ public class DebuggerCLI {
 					parameterTypes = new Class[0];
 					commands.getClass().getDeclaredMethod(command, parameterTypes).invoke(commands.getClass().newInstance());
 				} else {
-					parameterTypes = new Class[1];
-					parameterTypes[0] = Object.class;
+					parameterTypes = new Class[aritySize];
+					for (int i = 0; i < aritySize; i++) {
+						parameterTypes[i] = Object.class;
+					}
 					commands.getClass().getDeclaredMethod(command, parameterTypes).invoke(commands.getClass().newInstance(), args);
 				}
 			} catch (NoSuchMethodException e) {
-				System.out.println("Command \"" + command.toLowerCase()
-						+ "\" does not exist");
+				System.out.println("Command \"" + command.toLowerCase() + "\" does not exist");
 			}
 		}
 	}
