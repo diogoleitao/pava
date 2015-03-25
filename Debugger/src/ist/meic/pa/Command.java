@@ -5,13 +5,18 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import javassist.CtField;
 
 public final class Command {
 
 	//private static Exception exceptionThrown;
 	private static Object calledObject = new Object();
+	private static ArrayList<CtField> ctFields = new ArrayList<CtField>();
 	private static ArrayList<Field> objectFields = new ArrayList<Field>();
 	private static ArrayList<Method> callStack = new ArrayList<Method>();
+	private static HashMap<Field, Object> objectValues = new HashMap<Field, Object>();
 
 	public static int stateC;
 
@@ -20,8 +25,28 @@ public final class Command {
 	public Command(Object calledObject, ArrayList<Field> objectFields,
 			ArrayList<Method> callStack) {
 		Command.calledObject = calledObject;
-		Command.objectFields = objectFields;
+		//Command.objectFields = objectFields;
 		Command.callStack = callStack;
+	}
+	
+	public static void setCtFields(ArrayList<CtField> arrayList){ ctFields = arrayList;}
+	
+	private static void transformFields() {
+		for (CtField ctf : ctFields) {
+		    Field f;
+			try {
+				System.out.println(calledObject.getClass());
+//				f = calledObject.getClass().getDeclaredField(ctf.getName());
+//				System.out.println("laranjas");
+//				f.setAccessible(true);
+//				System.out.println("benenes");
+//				Object value = f.get(calledObject);
+//				objectValues.put(f, value);
+			} catch (SecurityException | IllegalArgumentException e) {
+				System.out.println("bananas");
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static void ABORT() {
@@ -33,7 +58,7 @@ public final class Command {
 	public static void INFO() {
 		System.out.println("---info---");
 		String output = "Called Object: " + calledObject.toString() + "\n\t\t"
-				+ "Fields: " + objectFields.toString() + "\n\t\t"
+				+ "Fields: " + ctFields.toString() + "\n\t\t"
 				+ "Call Stack:\n" + callStack.toString();
 		System.out.println(output);
 	}
@@ -82,7 +107,9 @@ public final class Command {
 		System.out.println("---retry---");
 	}
 
-	public static void startCLI() throws Throwable {
+	public static void startCLI(String obj) throws Throwable {
+		calledObject = Class.forName(obj).newInstance();
+		transformFields();
 		while (true) {
 			String command = "";
 			Object[] args = null;
