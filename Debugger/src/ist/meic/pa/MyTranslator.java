@@ -10,12 +10,16 @@ import javassist.NotFoundException;
 import javassist.Translator;
 
 public class MyTranslator implements Translator {
-	private ClassPool myPool;
+	//private HashMap<Object, ObjectFieldValue> ; 
+	private ClassPool pool;
+	
+	@Override
+	public void start(ClassPool pool) throws NotFoundException, CannotCompileException {}
 
 	@Override
 	public void onLoad(ClassPool pool, String ctClass)
 			throws NotFoundException, CannotCompileException {
-		myPool = pool;
+		this.pool = pool;
 		CtClass cc = pool.get(ctClass);
 		cc.setModifiers(Modifier.PUBLIC);
 
@@ -26,17 +30,12 @@ public class MyTranslator implements Translator {
 		}
 	}
 
-	@Override
-	public void start(ClassPool arg0) throws NotFoundException,
-			CannotCompileException {
-	}
-
 	private void instrumentClass(CtClass ctClass) throws NotFoundException {
 		// SAVE STATE FOR COMMAND'S INFO METHOD
 		for (CtMethod method : ctClass.getDeclaredMethods()) {
 			try {
-				// method.insertBefore("int state0 = History.currentState");
-				method.addCatch("{ System.out.println($e); throw $e; }", myPool.getCtClass("java.lang.Exception"));
+				if (!method.getReturnType().getName().equals("void"))
+					method.addCatch("{ return (" + method.getReturnType().getName() + ") 0; }", pool.getCtClass("java.lang.Exception"));
 			} catch (CannotCompileException e) {
 				e.printStackTrace();
 			}
