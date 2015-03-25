@@ -1,32 +1,36 @@
 package ist.meic.pa;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-public class Command {
+public final class Command {
 
-	private Exception exceptionThrown;
-	private Object calledObject = new Object();
-	private ArrayList<Field> objectFields = new ArrayList<Field>();
-	private ArrayList<Method> callStack = new ArrayList<Method>();
+	//private static Exception exceptionThrown;
+	private static Object calledObject = new Object();
+	private static ArrayList<Field> objectFields = new ArrayList<Field>();
+	private static ArrayList<Method> callStack = new ArrayList<Method>();
+
+	public static int stateC;
 
 	public Command() {}
 
 	public Command(Object calledObject, ArrayList<Field> objectFields,
 			ArrayList<Method> callStack) {
-		this.calledObject = calledObject;
-		this.objectFields = objectFields;
-		this.callStack = callStack;
+		Command.calledObject = calledObject;
+		Command.objectFields = objectFields;
+		Command.callStack = callStack;
 	}
 
-	public void ABORT() {
+	public static void ABORT() {
 		System.out.println("---abort---");
-		//System.exit(0);
-		return;
+		System.out.println(stateC);
+		//Runtime.getRuntime().exit(0);
 	}
 
-	public void INFO() {
+	public static void INFO() {
 		System.out.println("---info---");
 		String output = "Called Object: " + calledObject.toString() + "\n\t\t"
 				+ "Fields: " + objectFields.toString() + "\n\t\t"
@@ -34,18 +38,18 @@ public class Command {
 		System.out.println(output);
 	}
 
-	public void THROW() {
+	public static void THROW() {
 		System.out.println("---throw---");
 		//throw exceptionThrown;
 	}
 
-	public /*Object*/ void RETURN(Object returnValue) {
+	public static /*Object*/ void RETURN(Object returnValue) {
 		/*Method lastMethodCalled = callStack.get(0);
 		return lastMethodCalled; // THIS OBVIOUSLY MAKES NO SENSE*/
 		System.out.println("---return---");
 	}
 
-	public Object GET(Object fieldName) throws IllegalArgumentException, IllegalAccessException {
+	public static Object GET(Object fieldName) throws IllegalArgumentException, IllegalAccessException {
 		System.out.println("---get---");
 
 		String field = (String) fieldName;
@@ -57,7 +61,7 @@ public class Command {
 		return null;
 	}
 
-	public void SET(Object fieldName, Object value) throws IllegalArgumentException, IllegalAccessException {
+	public static void SET(Object fieldName, Object value) throws IllegalArgumentException, IllegalAccessException {
 		String field = (String) fieldName;
 		for (Field objectField : objectFields) {
 			if (objectField.getName().equals(field)) {
@@ -68,7 +72,7 @@ public class Command {
 		System.out.println("---set---");
 	}
 
-	public void RETRY() {
+	public static void RETRY() {
 		/*try {
 			callStack.get(0).invoke(null);
 		} catch (IllegalAccessException | IllegalArgumentException
@@ -76,5 +80,50 @@ public class Command {
 			e.printStackTrace();
 		}*/
 		System.out.println("---retry---");
+	}
+
+	public static void startCLI() throws Throwable {
+		while (true) {
+			String command = "";
+			Object[] args = null;
+			Class<?>[] parameterTypes = null;
+
+			printPrompt();
+
+			BufferedReader buffer = new BufferedReader(new InputStreamReader(System.in));
+
+			try {
+				String input[] = buffer.readLine().split(" ");
+				command = input[0].toUpperCase();
+				if (command.equals(""))
+					return;
+
+				int aritySize = input.length - 1;
+				if (input.length > 1) {
+					args = new Object[aritySize];
+					Object[] newArgs = new Object[aritySize];
+					System.arraycopy(input, 1, newArgs, 0, aritySize);
+					System.arraycopy(newArgs, 0, args, 0, newArgs.length);
+				}
+				// myLoader.getClass().getProtectionDomain().getPermissions().add(new RuntimePermission("exitVM")); --- SECURITY STUFF FOR SYSTEM.EXIT(0)
+
+				if (args == null) {
+					parameterTypes = new Class[0];
+					Command.class.getDeclaredMethod(command, parameterTypes).invoke(Command.class.newInstance());
+				} else {
+					parameterTypes = new Class[aritySize];
+					for (int i = 0; i < aritySize; i++) {
+						parameterTypes[i] = Object.class;
+					}
+					Command.class.getDeclaredMethod(command, parameterTypes).invoke(Command.class.newInstance(), args);
+				}
+			} catch (NoSuchMethodException e) {
+				System.out.println("Command \"" + command.toLowerCase() + "\" does not exist");
+			}
+		}
+	}
+
+	private static void printPrompt() {
+		System.out.println("DebuggerCLI:> ");
 	}
 }
