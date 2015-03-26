@@ -17,21 +17,15 @@ public final class Command {
 	private static ArrayList<Field> objectFields = new ArrayList<Field>();
 	private static ArrayList<Method> callStack = new ArrayList<Method>();
 	private static HashMap<Field, Object> objectValues = new HashMap<Field, Object>();
+	public static String PATH;
 
 	public static int stateC;
 
 	public Command() {}
 
-	public Command(Object calledObject, ArrayList<Field> objectFields,
-			ArrayList<Method> callStack) {
-		Command.calledObject = calledObject;
-		//Command.objectFields = objectFields;
-		Command.callStack = callStack;
-	}
-	
 	public static void setCtFields(ArrayList<CtField> arrayList){ ctFields = arrayList;}
-	
-	private static void transformFields() {
+
+	/*private static void transformFields() {
 		for (CtField ctf : ctFields) {
 		    Field f;
 			try {
@@ -47,13 +41,7 @@ public final class Command {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public static void ABORT() {
-		System.out.println("---abort---");
-		System.out.println(stateC);
-		//Runtime.getRuntime().exit(0);
-	}
+	}*/
 
 	public static void INFO() {
 		System.out.println("---info---");
@@ -107,9 +95,11 @@ public final class Command {
 		System.out.println("---retry---");
 	}
 
-	public static void startCLI(String obj) throws Throwable {
-		calledObject = Class.forName(obj).newInstance();
-		transformFields();
+	public static void startCLI(Object exceptionThrower) throws Throwable {
+		System.out.println(exceptionThrower.toString());
+		System.out.println(Command.PATH + " askldjalksdf");
+		//		calledObject = Class.forName(obj).newInstance();
+		//		transformFields();
 		while (true) {
 			String command = "";
 			Object[] args = null;
@@ -122,7 +112,9 @@ public final class Command {
 			try {
 				String input[] = buffer.readLine().split(" ");
 				command = input[0].toUpperCase();
-				if (command.equals(""))
+
+				//command ABORT -- special case
+				if (command.equals("ABORT"))
 					return;
 
 				int aritySize = input.length - 1;
@@ -152,5 +144,37 @@ public final class Command {
 
 	private static void printPrompt() {
 		System.out.println("DebuggerCLI:> ");
+	}
+
+	public static void exceptionCatcher(String methodName, Object[] args, Object o) throws Throwable {
+		try {
+			Class<?> parameterTypes[] = new Class<?>[] {};
+			for (int i = 0; i < args.length; i++) {
+				parameterTypes[i] = args[i].getClass();
+			}
+			o.getClass().getDeclaredMethod(methodName, parameterTypes).invoke(o, args);
+		} catch (Exception e) {
+			System.out.println(e);
+			calledObject = o;
+			ist.meic.pa.Command.startCLI(calledObject);
+			return;
+		}
+	}
+
+	public static Object exceptionCatcherWithReturn(String methodName, Object[] args, Object o) throws Throwable {
+		Object result = null;
+		try {
+			Class<?> parameterTypes[] = new Class<?>[] {};
+			for (int i = 0; i < args.length; i++) {
+				parameterTypes[i] = args[i].getClass();
+			}
+
+			result = o.getClass().getDeclaredMethod(methodName, parameterTypes).invoke(o, args);
+		} catch (Exception e) {
+			System.out.println(e);
+			calledObject = o;
+			ist.meic.pa.Command.startCLI(calledObject);
+		}
+		return result;
 	}
 }
