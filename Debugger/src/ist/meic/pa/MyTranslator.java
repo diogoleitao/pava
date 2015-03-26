@@ -5,9 +5,11 @@ import java.lang.reflect.Modifier;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.Translator;
+import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 
@@ -39,6 +41,21 @@ public class MyTranslator implements Translator {
 	}
 
 	private void instrumentClass(CtClass ctClass) throws Throwable {
+
+		//ADDED DIANA
+//		//instrument constructor calls 
+//		for(CtConstructor constructor : ctClass.getDeclaredConstructors()){
+//			constructor.instrument(new ExprEditor() {
+//				public void edit(ConstructorCall c) throws CannotCompileException {
+//					final String templateConstructorCall;
+//					templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
+//					c.replace(String.format(templateConstructorCall, c.getMethodName()));
+//				}
+//			
+//			});
+//		}
+		
+		//instrument method calls, one case for void and another for the other types
 		for (CtMethod method : ctClass.getDeclaredMethods()) {
 			if (method.getReturnType().equals("void")) {
 				method.instrument(new ExprEditor() {
