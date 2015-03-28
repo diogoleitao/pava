@@ -193,7 +193,6 @@ public final class Command {
 		}
 	}	
 	
-//	ADDED DIANA
 	public static void exceptionCatcherConstructor(String constructorName, Object[] args, Object o) throws Throwable {
 		try {
 			Class<?> parameterTypes[] = new Class<?>[args.length];

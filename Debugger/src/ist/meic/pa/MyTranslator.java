@@ -41,8 +41,6 @@ public class MyTranslator implements Translator {
 	}
 
 	private void instrumentClass(CtClass ctClass) throws Throwable {
-
-	
 		
 		//instrument method calls, one case for void and another for the other types
 		for (CtMethod method : ctClass.getDeclaredMethods()) {
@@ -56,6 +54,7 @@ public class MyTranslator implements Translator {
 				}
 			
 			});
+			//instrument method calls inside each method
 			if (method.getReturnType().equals("void")) {
 				method.instrument(new ExprEditor() {
 					public void edit(MethodCall m) throws CannotCompileException {
