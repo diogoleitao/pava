@@ -42,21 +42,20 @@ public class MyTranslator implements Translator {
 
 	private void instrumentClass(CtClass ctClass) throws Throwable {
 
-		//ADDED DIANA
-//		//instrument constructor calls 
-//		for(CtConstructor constructor : ctClass.getDeclaredConstructors()){
-//			constructor.instrument(new ExprEditor() {
-//				public void edit(ConstructorCall c) throws CannotCompileException {
-//					final String templateConstructorCall;
-//					templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
-//					c.replace(String.format(templateConstructorCall, c.getMethodName()));
-//				}
-//			
-//			});
-//		}
+	
 		
 		//instrument method calls, one case for void and another for the other types
 		for (CtMethod method : ctClass.getDeclaredMethods()) {
+			
+			//instrument constructor calls inside each method
+			method.instrument(new ExprEditor() {
+				public void edit(ConstructorCall c) throws CannotCompileException {
+					final String templateConstructorCall;
+					templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
+					c.replace(String.format(templateConstructorCall, c.getMethodName()));
+				}
+			
+			});
 			if (method.getReturnType().equals("void")) {
 				method.instrument(new ExprEditor() {
 					public void edit(MethodCall m) throws CannotCompileException {
@@ -65,6 +64,7 @@ public class MyTranslator implements Translator {
 						m.replace(String.format(templateMethodCall, m.getMethodName()));
 					}
 				});
+				
 			} else {
 				method.instrument(new ExprEditor() {
 					public void edit(MethodCall m) throws CannotCompileException {

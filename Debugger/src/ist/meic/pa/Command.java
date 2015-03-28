@@ -194,48 +194,47 @@ public final class Command {
 	}	
 	
 //	ADDED DIANA
-//	public static void exceptionCatcherConstructor(String constructorName, Object[] args, Object o) throws Throwable {
-//		try {
-//			Class<?> parameterTypes[] = new Class<?>[args.length];
-//			for (int i = 0; i < args.length; i++)
-//				parameterTypes[i] = args[i].getClass();
-//
-//			// CONVERT ARGS TYPE TO PRIMITIVE ONES
-//			for (int i = 0; i < parameterTypes.length; i++) {
-//				if (parameterTypes[i].getName().equals("java.lang.Integer")) {
-//					parameterTypes[i] = int.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Double")) {
-//					parameterTypes[i] = double.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Float")) {
-//					parameterTypes[i] = float.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Long")) {
-//					parameterTypes[i] = long.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Character")) {
-//					parameterTypes[i] = char.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Short")) {
-//					parameterTypes[i] = short.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Boolean")) {
-//					parameterTypes[i] = boolean.class;
-//				} else if (parameterTypes[i].getName().equals("java.lang.Byte")) {
-//					parameterTypes[i] = byte.class;
-//				}
-//			}
-//
-//			callStack += o.getClass().getName() + "." + constructorName + args.toString() + "\n";
-//			lastConstructorInvoked = o.getClass().getDeclaredConstructor(parameterTypes);
-//			//lastConstructorInvoked.invoke(o, args);
-//			lastConstructorInvoked.newInstance(args); //como nao da o invoke a excepcao seria lancada no new instance maybe lel
-//		} catch (InvocationTargetException e) {
-//			System.out.println(1);
-//			calledObject = o;
-//			exceptionThrown = e.getTargetException();
-//			System.out.println(e.getTargetException());
-//			ist.meic.pa.Command.startCLI(calledObject);
-//			return;
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	public static void exceptionCatcherConstructor(String constructorName, Object[] args, Object o) throws Throwable {
+		try {
+			Class<?> parameterTypes[] = new Class<?>[args.length];
+			for (int i = 0; i < args.length; i++)
+				parameterTypes[i] = args[i].getClass();
+
+			// CONVERT ARGS TYPE TO PRIMITIVE ONES
+			for (int i = 0; i < parameterTypes.length; i++) {
+				if (parameterTypes[i].getName().equals("java.lang.Integer")) {
+					parameterTypes[i] = int.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Double")) {
+					parameterTypes[i] = double.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Float")) {
+					parameterTypes[i] = float.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Long")) {
+					parameterTypes[i] = long.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Character")) {
+					parameterTypes[i] = char.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Short")) {
+					parameterTypes[i] = short.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Boolean")) {
+					parameterTypes[i] = boolean.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Byte")) {
+					parameterTypes[i] = byte.class;
+				}
+			}
+
+			callStack += o.getClass().getName() + "." + constructorName + args.toString() + "\n";
+			lastConstructorInvoked = o.getClass().getDeclaredConstructor(parameterTypes);
+			lastConstructorInvoked.newInstance(args); //since we cannot invoke is it new instance?
+		} catch (InvocationTargetException e) {
+			System.out.println(1);
+			calledObject = o;
+			exceptionThrown = e.getTargetException();
+			System.out.println(e.getTargetException());
+			ist.meic.pa.Command.startCLI(calledObject);
+			return;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static Object exceptionCatcherWithReturn(String methodName, Object[] args, Object o) throws Throwable {
 		Object result = null; 
