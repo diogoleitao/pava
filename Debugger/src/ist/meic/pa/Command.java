@@ -105,7 +105,7 @@ public final class Command {
 		for (int i = callStack.size() - 1; i >= 0; i--)
 			methodCalls += callStack.get(i);
 
-		String output = "Called Object: " + calledObject.toString() + "\n\t\t"
+		String output = "Called Object: " + calledObject.toString() + "\n\t"
 				+ "Fields: " + objectFields + "\r\rCall Stack:\n\n" + methodCalls;
 		System.out.print(output);
 	}
@@ -117,6 +117,7 @@ public final class Command {
 	 */
 	public static void THROW() throws Throwable {
 		callStack.pop();
+		methodCallStack.pop();
 		throw exceptionThrown;
 	}
 
@@ -229,14 +230,21 @@ public final class Command {
 	}
 
 	/**
-	 * Re-run the program being instrumented again
-	 *
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 * @throws InvocationTargetException
+	 * Try to invoke the last called method again
+	 * @throws Throwable 
 	 */
-	public static void RETRY() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		
+	public static void RETRY() throws Throwable {
+		try {
+			System.out.println(methodCallStack.peek());
+			System.out.println(calledObject);
+			System.out.println(lastMethodInvokedArguments);
+			methodCallStack.peek().invoke(calledObject, lastMethodInvokedArguments);
+		} catch (NullPointerException e) {
+			throw e;
+		} catch (InvocationTargetException e) {
+			System.out.println(123123123);
+			throw e.getTargetException();
+		}
 	}
 
 	/**
@@ -438,30 +446,33 @@ public final class Command {
 	 * @return
 	 * @throws Throwable
 	 */
-	public static Object exceptionCatcherWithReturn(String methodName, Object[] methodArgs, Object invokedObject) throws Throwable {
+	public static Object exceptionCatcherWithReturn(String methodName, Object[] methodArgs, Object invokedObject) throws Throwable {		
 		Object result = null;
 		Class<?> parameterTypes[] = new Class<?>[methodArgs.length];
-		for (int i = 0; i < methodArgs.length; i++)
-			parameterTypes[i] = methodArgs[i].getClass();
+		for (int i = 0; i < methodArgs.length; i++) {
+			if (!methodArgs[i].equals(null)) {
+				parameterTypes[i] = methodArgs[i].getClass();
 
-		// CONVERT ARGS TYPE TO PRIMITIVE ONES
-		for (int i = 0; i < parameterTypes.length; i++) {
-			if (parameterTypes[i].getName().equals("java.lang.Integer")) {
-				parameterTypes[i] = int.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Double")) {
-				parameterTypes[i] = double.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Float")) {
-				parameterTypes[i] = float.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Long")) {
-				parameterTypes[i] = long.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Character")) {
-				parameterTypes[i] = char.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Short")) {
-				parameterTypes[i] = short.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Boolean")) {
-				parameterTypes[i] = boolean.class;
-			} else if (parameterTypes[i].getName().equals("java.lang.Byte")) {
-				parameterTypes[i] = byte.class;
+				// CONVERT ARGS TYPE TO PRIMITIVE ONES
+				if (parameterTypes[i].getName().equals("java.lang.Integer")) {
+					parameterTypes[i] = int.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Double")) {
+					parameterTypes[i] = double.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Float")) {
+					parameterTypes[i] = float.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Long")) {
+					parameterTypes[i] = long.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Character")) {
+					parameterTypes[i] = char.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Short")) {
+					parameterTypes[i] = short.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Boolean")) {
+					parameterTypes[i] = boolean.class;
+				} else if (parameterTypes[i].getName().equals("java.lang.Byte")) {
+					parameterTypes[i] = byte.class;
+				}
+			} else {
+				parameterTypes[i] = null;
 			}
 		}
 		try {
@@ -490,7 +501,11 @@ public final class Command {
 				methodCallStack.push(invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes));
 			}
 
-			result = invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes).invoke(invokedObject, methodArgs);
+			try {
+				result = invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes).invoke(invokedObject, methodArgs);
+			} catch (NullPointerException e1) {
+				throw e1;
+			}
 		} catch (InvocationTargetException e) {
 			System.out.println(e.getTargetException());
 			ist.meic.pa.Command.startCLI(methodName, methodArgs, invokedObject, parameterTypes, e.getTargetException(), false);
