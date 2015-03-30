@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.Translator;
@@ -39,31 +40,23 @@ public class MyTranslator implements Translator {
 		}
 	}
 
-	private void instrumentClass(CtClass ctClass) throws Throwable {
+	private void instrumentClass(CtClass ctClass) {
 
-		//instrument method calls, one case for void and another for the other types
-		for (CtMethod method : ctClass.getDeclaredMethods()) {
+		try {
+			//instrument method calls, one case for void and another for the other types
+			for (CtMethod method : ctClass.getDeclaredMethods()) {
 
-			//instrument constructor calls inside each method
-			method.instrument(new ExprEditor() {
-				public void edit(ConstructorCall c) throws CannotCompileException {
-					final String templateConstructorCall;
-					templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
-					c.replace(String.format(templateConstructorCall, c.getMethodName()));
-				}
-
-			});
-
-			//instrument method calls inside each method
-			if (method.getReturnType().equals("void")) {
+				//instrument constructor calls inside each method
 				method.instrument(new ExprEditor() {
-					public void edit(MethodCall m) throws CannotCompileException {
-						final String templateMethodCall;
-						templateMethodCall = "ist.meic.pa.Command.exceptionCatcher(\"%s\", $args, $0);";
-						m.replace(String.format(templateMethodCall, m.getMethodName()));
+					public void edit(ConstructorCall c) throws CannotCompileException {
+						final String templateConstructorCall;
+						templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
+						c.replace(String.format(templateConstructorCall, c.getMethodName()));
 					}
+
 				});
-			} else {
+
+				// instrument method calls inside each method
 				method.instrument(new ExprEditor() {
 					public void edit(MethodCall m) throws CannotCompileException {
 						final String templateMethodCall;
@@ -72,6 +65,30 @@ public class MyTranslator implements Translator {
 					}
 				});
 			}
+
+			for (CtConstructor constructor : ctClass.getDeclaredConstructors()) {
+/*
+				//instrument constructor calls inside each constructor
+				constructor.instrument(new ExprEditor() {
+					public void edit(ConstructorCall c) throws CannotCompileException {
+						final String templateConstructorCall;
+						templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
+						c.replace(String.format(templateConstructorCall, c.getMethodName()));
+					}
+				});
+*/
+
+				//instrument method calls inside each constructor
+				constructor.instrument(new ExprEditor() {
+					public void edit(MethodCall m) throws CannotCompileException {
+						final String templateMethodCall;
+						templateMethodCall = "$_ = ($r) ist.meic.pa.Command.exceptionCatcherWithReturn(\"%s\", $args, $0);";
+						m.replace(String.format(templateMethodCall, m.getMethodName()));
+					}
+				});
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
 	}
 }
