@@ -9,6 +9,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
+/**
+ * The Command class has all the CLI
+ * command methods, handles the user input
+ * and also has the methods that are injected
+ * during the class instrumentation
+ *
+ */
 public final class Command {
 
 	/**
@@ -23,7 +30,7 @@ public final class Command {
 
 	/**
 	 * The last method invoked from the previously mentioned object from which
-	 * the Expection originated
+	 * the exception originated
 	 */
 	private static Method lastMethodInvoked = null;
 
@@ -64,22 +71,6 @@ public final class Command {
 	public Command() {
 	}
 
-	public static void pushMain(String main, Object[] mainArgs) {
-		// trim main declaration
-		main = main.substring(main.indexOf("void") + 5, main.indexOf("main") + 4);
-
-		// build main arguments string
-		String args = "";
-		if (mainArgs.length == 0);
-		else {
-			for (Object arg : mainArgs) {
-				args += arg.toString() + ",";
-			}
-		}
-
-		main += main + "(" + args + ")\n";
-	}
-
 	/**
 	 * Aborts the current program and terminates the DebuggerCLI application.
 	 * Doesn't work when running the DebuggerCLI with Ant (it doesn't have
@@ -90,7 +81,7 @@ public final class Command {
 	}
 
 	/**
-	 * Info command; Prints the current object being analized with the following
+	 * Info command; Prints the current object being analyzed with the following
 	 * information: the object itself, its fields and the call stack with each
 	 * method's arguments
 	 */
@@ -111,7 +102,7 @@ public final class Command {
 	}
 
 	/**
-	 * Rethrows the Exception caught to be handled by the next handler
+	 * Re-throws the Exception caught to be handled by the next handler
 	 *
 	 * @throws Throwable
 	 */
@@ -123,7 +114,7 @@ public final class Command {
 
 	/**
 	 * Returns to the last method invoked the parameter given as input,
-	 * disregarding the behaviour of said method
+	 * disregarding the behavior of said method
 	 *
 	 * @param returnValue
 	 */
@@ -179,7 +170,7 @@ public final class Command {
 	}
 
 	/**
-	 * Sets the field <i>fieldName</i> with value <i>value</i>, both given as
+	 * Sets the field "fieldName" with value "value", both given as
 	 * input. The value is casted down before being assigned to the field.
 	 *
 	 * @param fieldName
@@ -235,38 +226,40 @@ public final class Command {
 	 */
 	public static void RETRY() throws Throwable {
 		try {
-			System.out.println(methodCallStack.peek());
-			System.out.println(calledObject);
-			System.out.println(lastMethodInvokedArguments);
-			methodCallStack.peek().invoke(calledObject, lastMethodInvokedArguments);
+			methodCallStack.pop().invoke(calledObject, lastMethodInvokedArguments);
 		} catch (NullPointerException e) {
 			throw e;
 		} catch (InvocationTargetException e) {
-			System.out.println(123123123);
 			throw e.getTargetException();
 		}
 	}
 
 	/**
 	 * Starts the command line interface loop. Firstly, it reads the command an
-	 * possible arguments given as input; Secondly, if it's the <i>Abort</i>
-	 * command, then it immediatly exits the DebuggerCLI; if not, then it tries
+	 * possible arguments given as input; Secondly, if it's the Abort
+	 * command, then it immediately exits the DebuggerCLI; if not, then it tries
 	 * to invoke the given command as a method on this class with the given
 	 * arguments, if there are any.
 	 *
+	 * @param methodName
+	 * @param methodArgs
+	 * @param invokedObject
+	 * @param paramTypes
+	 * @param thrownException
+	 * @param isConstructor
 	 * @throws Throwable
 	 */
-	public static void startCLI(String m, Object[] a, Object o, Class<?>[] p, Throwable e, boolean isConstructor) throws Throwable {
+	public static void startCLI(String methodName, Object[] methodArgs, Object invokedObject, Class<?>[] paramTypes, Throwable thrownException, boolean isConstructor) throws Throwable {
 
 		// update necessary fields
 		if (isConstructor) 
-			lastConstructorInvoked = o.getClass().getDeclaredConstructor(p);
+			lastConstructorInvoked = invokedObject.getClass().getDeclaredConstructor(paramTypes);
 		else
-			lastMethodInvoked = o.getClass().getDeclaredMethod(m, p);
+			lastMethodInvoked = invokedObject.getClass().getDeclaredMethod(methodName, paramTypes);
 
-		lastMethodInvokedArguments = a;
-		calledObject = o;
-		exceptionThrown = e;
+		lastMethodInvokedArguments = methodArgs;
+		calledObject = invokedObject;
+		exceptionThrown = thrownException;
 
 		while (true) {
 			String command = "";
@@ -320,81 +313,9 @@ public final class Command {
 	 * Prints the CLI prompt
 	 */
 	private static void printPrompt() {
-		System.out.println("DebuggerCLI:> ");
+		System.out.print("DebuggerCLI:> ");
 	}
-	/*
-	/**
-	 * @param methodName
-	 * @param methodArgs
-	 * @param invokedObject
-	 * @throws Throwable
-	 *
-	public static void exceptionCatcher(String methodName, Object[] methodArgs, Object invokedObject) throws Throwable {
-		try {
-			Class<?> parameterTypes[] = new Class<?>[methodArgs.length];
-			for (int i = 0; i < methodArgs.length; i++)
-				parameterTypes[i] = methodArgs[i].getClass();
 
-			// CONVERT ARGS TYPE TO PRIMITIVE ONES
-			for (int i = 0; i < parameterTypes.length; i++) {
-				if (parameterTypes[i].getName().equals("java.lang.Integer")) {
-					parameterTypes[i] = int.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Double")) {
-					parameterTypes[i] = double.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Float")) {
-					parameterTypes[i] = float.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Long")) {
-					parameterTypes[i] = long.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Character")) {
-					parameterTypes[i] = char.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Short")) {
-					parameterTypes[i] = short.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Boolean")) {
-					parameterTypes[i] = boolean.class;
-				} else if (parameterTypes[i].getName().equals("java.lang.Byte")) {
-					parameterTypes[i] = byte.class;
-				}
-			}
-
-			String args = "";
-			boolean hasMoreThanOne = false;
-			for (Object arg : methodArgs) {
-				switch (methodArgs.length) {
-				case 0:
-					args = "";
-					break;
-				case 1:
-					args = arg.toString();
-					break;
-				default:
-					args += arg.toString() + ",";
-					hasMoreThanOne = true;
-					break;
-				}
-			}
-
-			if (hasMoreThanOne)
-				args = args.substring(0, args.length() - 1);
-
-			lastMethodInvokedArguments = methodArgs;
-			boolean javaMethod = invokedObject.getClass().getName().contains("java."); 
-
-			if (!javaMethod)
-				callStack.push(invokedObject.getClass().getName() + "." + methodName + "(" + args + ")\n");
-
-			lastMethodInvoked = invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes);
-			lastMethodInvoked.invoke(invokedObject, methodArgs);
-		} catch (InvocationTargetException e) {
-			calledObject = invokedObject;
-			exceptionThrown = e.getTargetException();
-			System.err.println(exceptionThrown);
-			ist.meic.pa.Command.startCLI();
-			return;
-		} catch (Exception e) {
-			System.err.println(e);
-		}
-	}
-	 */
 	/**
 	 * @param constructorName
 	 * @param constructorArgs
@@ -435,7 +356,7 @@ public final class Command {
 			ist.meic.pa.Command.startCLI(constructorName, constructorArgs, invokedObject, parameterTypes, e.getTargetException(), true);
 			return;
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.err.println("An unhandled exception was caught " + e.toString());
 		}
 	}
 
@@ -510,7 +431,7 @@ public final class Command {
 			System.out.println(e.getTargetException());
 			ist.meic.pa.Command.startCLI(methodName, methodArgs, invokedObject, parameterTypes, e.getTargetException(), false);
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.err.println("An unhandled exception was caught " + e.toString());
 		}
 
 		if (customReturn) {

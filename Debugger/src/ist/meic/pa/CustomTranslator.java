@@ -9,24 +9,23 @@ import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.Translator;
-import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 
 /**
- * The ExtendedTranslator classes implements the Translator
+ * The CustomTranslator implements the Translator
  * interface and overrides the onLoad method so that
  * it is possible for us to instrument the classes
- * as we want to; it also instruments the constructors
+ * as we want to
  */
-public class ExtendedTranslator implements Translator {
+public class CustomTranslator implements Translator {
 
 	@Override
 	public void start(ClassPool pool) throws NotFoundException, CannotCompileException {
 	}
 
 	@Override
-	public void onLoad(ClassPool pool, String ctClass) throws NotFoundException {
+	public void onLoad(ClassPool pool, String ctClass) throws NotFoundException, CannotCompileException {
 		CtClass cc = pool.get(ctClass);
 		cc.setModifiers(Modifier.PUBLIC);
 
@@ -53,17 +52,7 @@ public class ExtendedTranslator implements Translator {
 					methodCall.replace(String.format(templateMethodCall, methodCall.getMethodName()));
 				}
 			});
-			// instrument constructor calls inside each method
-			method.instrument(new ExprEditor() {
-				public void edit(ConstructorCall c) throws CannotCompileException {
-					final String templateConstructorCall;
-					templateConstructorCall = "ist.meic.pa.Command.exceptionCatcherConstructor(\"%s\", $args, $0);";
-					c.replace(String.format(templateConstructorCall, c.getMethodName()));
-				}
-
-			});
 		}
-
 		//instrument class constructors
 		for (CtConstructor constructor : ctClass.getDeclaredConstructors()) {
 			//instrument method calls inside each constructor

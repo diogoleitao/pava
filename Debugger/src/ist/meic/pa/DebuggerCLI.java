@@ -8,10 +8,12 @@ import javassist.Loader;
 import javassist.NotFoundException;
 import javassist.Translator;
 
+/**
+ * The DebuggerCLI class sets up the ClassPool,
+ * custom Translator and class loader and invokes
+ * the main method from the class given as input
+ */
 public class DebuggerCLI {
-
-	@SuppressWarnings("unused")
-	private static Loader myLoader;
 
 	/**
 	 * @param args 
@@ -22,7 +24,7 @@ public class DebuggerCLI {
 	public static void main(String[] args) {
 
 		// SETUP OBJECTS
-		Translator translator = new MyTranslator();
+		Translator translator = new CustomTranslator();
 		ClassPool pool = ClassPool.getDefault();
 
 		try {
@@ -30,7 +32,6 @@ public class DebuggerCLI {
 
 			try {
 				Loader classLoader = new Loader(pool);
-				myLoader = classLoader;
 				classLoader.addTranslator(pool, translator);
 
 				try {
