@@ -6,4 +6,5 @@
 ;; Diogo Leitao 69644
 ;; Diana Ribeiro 70096
 
-(defun APL ())
+(compile-file "apl.lisp")
+(load "apl.lisp")
