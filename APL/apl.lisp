@@ -30,7 +30,12 @@
 (defgeneric ./ ())
 
 ;;Monadic Functions - functions that receive only one argument
+
+;;@Leitao - estive a pensar nisto e se calhar com recursao conseguimos fazer sem usar o for mas ainda nai sei bem como..
+;;			tipo o caso de paragem e quando o scalar=1 e depois chamavamos uma funcao recursiva que adiciona ao vector sempre scalar -1 no inicio ate chegar a 1
+;;			so nao sei como fazer a parte de criar o vector e nao sei de todo se esta e uma boa abordagem lol
 (defun interval(scalar))
+
 
 (defun drop(elements))
 
