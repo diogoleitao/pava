@@ -20,4 +20,14 @@
 			</manifest>
 		</jar>
 	</target>
+
+	<target name="run" depends="compile" description="Runs the DebuggerCLI">
+		<java classname="ist.meic.pa.DebuggerCLI" fork="false" spawn="false">
+			<classpath>
+				<path refid="project-classpath" />
+				<path location="debugger.jar" />
+			</classpath>
+			<arg value="test.TestSimple" />
+		</java>
+	</target>
 </project>
