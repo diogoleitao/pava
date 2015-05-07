@@ -48,7 +48,7 @@ public class CustomTranslator implements Translator {
 			method.instrument(new ExprEditor() {
 				public void edit(MethodCall methodCall) throws CannotCompileException {
 					final String templateMethodCall;
-					templateMethodCall = "$_ = ($r) ist.meic.pa.Command.exceptionCatcherWithReturn(\"%s\", $args, $0);";
+					templateMethodCall = "$_ = ($r) ist.meic.pa.Command.exceptionCatcherWithReturn(\"%s\", $args, $0, $class);";
 					methodCall.replace(String.format(templateMethodCall, methodCall.getMethodName()));
 				}
 			});
@@ -59,7 +59,7 @@ public class CustomTranslator implements Translator {
 			constructor.instrument(new ExprEditor() {
 				public void edit(MethodCall methodCall) throws CannotCompileException {
 					final String templateMethodCall;
-					templateMethodCall = "$_ = ($r) ist.meic.pa.Command.exceptionCatcherWithReturn(\"%s\", $args, $0);";
+					templateMethodCall = "$_ = ($r) ist.meic.pa.Command.exceptionCatcherWithReturn(\"%s\", $args, $0, $class);";
 					methodCall.replace(String.format(templateMethodCall, methodCall.getMethodName()));
 				}
 			});

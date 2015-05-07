@@ -367,7 +367,7 @@ public final class Command {
 	 * @return
 	 * @throws Throwable
 	 */
-	public static Object exceptionCatcherWithReturn(String methodName, Object[] methodArgs, Object invokedObject) throws Throwable {		
+	public static Object exceptionCatcherWithReturn(String methodName, Object[] methodArgs, Object invokedObject, Class<?> clazz) throws Throwable {
 		Object result = null;
 		Class<?> parameterTypes[] = new Class<?>[methodArgs.length];
 		for (int i = 0; i < methodArgs.length; i++) {
@@ -397,35 +397,68 @@ public final class Command {
 			}
 		}
 		try {
-			boolean javaMethod = invokedObject.getClass().getName().contains("java.");
-			if (!javaMethod) {
-				String args = "";
-				boolean hasMoreThanOne = false;
-				for (Object arg : methodArgs) {
-					switch (methodArgs.length) {
-					case 0:
-						args = "";
-						break;
-					case 1:
-						args = arg.toString();
-						break;
-					default:
-						args += arg.toString() + ",";
-						hasMoreThanOne = true;
-						break;
+			boolean javaMethod;
+			if (invokedObject == null) {
+				javaMethod = clazz.getName().contains("java.");
+				if (!javaMethod) {
+					String args = "";
+					boolean hasMoreThanOne = false;
+					for (Object arg : methodArgs) {
+						switch (methodArgs.length) {
+						case 0:
+							args = "";
+							break;
+						case 1:
+							args = arg.toString();
+							break;
+						default:
+							args += arg.toString() + ",";
+							hasMoreThanOne = true;
+							break;
+						}
 					}
+	
+					if (hasMoreThanOne)
+						args = args.substring(0, args.length() - 1);
+					callStack.push(clazz.getName() + "." + methodName + "(" + args + ")\n");
+					methodCallStack.push(clazz.getDeclaredMethod(methodName, parameterTypes));
 				}
-
-				if (hasMoreThanOne)
-					args = args.substring(0, args.length() - 1);
-				callStack.push(invokedObject.getClass().getName() + "." + methodName + "(" + args + ")\n");
-				methodCallStack.push(invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes));
-			}
-
-			try {
-				result = invokedObject.getClass().getDeclaredMethod(methodName, parameterTypes).invoke(invokedObject, methodArgs);
-			} catch (NullPointerException e1) {
-				throw e1;
+				try {
+					clazz.getMethod(methodName, parameterTypes).invoke(null, methodArgs);
+				} catch (NullPointerException e1) {
+					throw e1;
+				}
+			} else {
+				javaMethod = clazz.getName().contains("java.");
+				if (!javaMethod) {
+					String args = "";
+					boolean hasMoreThanOne = false;
+					for (Object arg : methodArgs) {
+						switch (methodArgs.length) {
+						case 0:
+							args = "";
+							break;
+						case 1:
+							args = arg.toString();
+							break;
+						default:
+							args += arg.toString() + ",";
+							hasMoreThanOne = true;
+							break;
+						}
+					}
+	
+					if (hasMoreThanOne)
+						args = args.substring(0, args.length() - 1);
+					callStack.push(clazz.getName() + "." + methodName + "(" + args + ")\n");
+					methodCallStack.push(clazz.getDeclaredMethod(methodName, parameterTypes));
+				}
+	
+				try {
+					result = clazz.getDeclaredMethod(methodName, parameterTypes).invoke(invokedObject, methodArgs);
+				} catch (NullPointerException e1) {
+					throw e1;
+				}
 			}
 		} catch (InvocationTargetException e) {
 			System.out.println(e.getTargetException());
