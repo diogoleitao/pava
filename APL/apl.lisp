@@ -23,6 +23,26 @@
 (defun tensor (dim value)
 	(make-array dim :initial-element value))
 
+;;definition of the class tensor and acessor methods
+(defclass tensor ()
+	((dim :reader tensor_dim
+		  :writer set_tensor_dim)
+	 (values :type list
+	 		 :accessor tensor_values)
+	)
+)
+(defmethod tensor_dim ((obj tensor))
+  (slot-value obj 'dim))
+
+(defmethod set_tensor_dim ((obj tensor) new-value)
+  (setf (slot-value obj 'dim) new-value))
+
+(defmethod tensor_values ((obj tensor))
+  (slot-value obj 'values))
+
+(defmethod (setf tensor_values) (new-value (obj tensor)) 
+	(setf (slot-value obj 'tensor_values) new-value))
+
 ;; Scalar and vector creation
 ;; e.g.: (s 2) prints out 2 and
 ;; 		 (v 1 2 3) prints out 1 2 3
