@@ -25,16 +25,14 @@
 
 ;;definition of the class tensor and acessor methods
 (defclass tensor ()
-	((dim :reader tensor_dim
-		  :writer set_tensor_dim)
-	 (values :type list
-	 		 :accessor tensor_values)
+	((dim :accessor tensor_dim)
+	 (values :accessor tensor_values)
 	)
 )
 (defmethod tensor_dim ((obj tensor))
   (slot-value obj 'dim))
 
-(defmethod set_tensor_dim ((obj tensor) new-value)
+(defmethod (setf tensor_dim) ((obj tensor) new-value)
   (setf (slot-value obj 'dim) new-value))
 
 (defmethod tensor_values ((obj tensor))
@@ -49,8 +47,32 @@
 (defun s(scalar)
 	(tensor (list 1) scalar))
 
+(defclass scalar(tensor)
+	((dim :accessor tensor_dim
+		  :initform 0)
+	 (values :type integer 
+			 :accessor tensor_values)
+	)
+)
+
 (defun v(&rest values)
 	(tensor (list (list-length values)) values))
+
+(defclass vector(tensor)
+	((dim :accessor tensor_dim
+		  :initform 1)
+	 (values :type array
+			 :accessor tensor_values)
+	)
+)
+
+(defclass matrix(tensor)
+	((dim :accessor tensor_dim
+		  :initform 2)
+	 (values :type array
+			 :accessor tensor_values)
+	)
+)
 
 (defgeneric .- (&rest values))
 
