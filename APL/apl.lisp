@@ -21,12 +21,12 @@
 ;; Tensor (of numbers) and booleans representation
 ;; Note: true is 1 and false is 0
 (defun tensor (dim value)
-	(make-array dim :initial-element value))
+	(list value))
 
 ;;definition of the class tensor and acessor methods
-(defclass tensor ()
+(defclass tensorClass ()
 	((dim :accessor tensor_dim)
-	 (values :accessor tensor_values)
+	 (values :type list :initarg :tensor :accessor tensor_values)
 	)
 )
 (defmethod tensor_dim ((obj tensor))
@@ -132,14 +132,14 @@
 	(let ((tAux (tensor (array-rank tensor) 0)))
 		(dotimes (i (array-dimension tensor 0))
 			(setf (aref tAux i)
-				  (cos (aref tensor i))))
+				  (sin (aref tensor i))))
 	tAux))
 
 (defun .cos (tensor)
 	(let ((tAux (tensor (array-rank tensor) 0)))
 		(dotimes (i (array-dimension tensor 0))
 			(setf (aref tAux i)
-				  (sin (aref tensor i))))
+				  (cos (aref tensor i))))
 	tAux)
 )
 
