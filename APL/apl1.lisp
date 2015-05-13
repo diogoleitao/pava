@@ -2,16 +2,14 @@
 	(if (= n 0) 1
 		(* n (factorial (- n 1)))))
 
-(defun factorialList (lst)
-	(let ((lAux (list)))
-			(dolist (i lst)
-					(setf lAux (append lAux (list (factorial i)))))
-			lAux)
-)
+(dolist (i lst)
+		(setf lAux (append lAux (list (factorial i))))
+lAux)
+
 
 
 (defclass tensorClass ()
-	((elements :type list 
+	((elements :type list
 		   :initform '()
 		   :initarg :elements
 		   :accessor elements-slot)
@@ -22,7 +20,7 @@
 )
 
 (defclass scalarClass (tensorClass)
-	((elements :type list 
+	((elements :type list
 			:initform '()
 			:initarg :elements)
 	  (size :type list
@@ -32,7 +30,7 @@
 )
 
 (defclass vectorClass (tensorClass)
-	((elements :type list 
+	((elements :type list
 		   :initform '()
 		   :initarg :elements)
 	  (size :type list
@@ -100,7 +98,7 @@
 			(setf (slot-value tAux 'elements) (factorial (first (slot-value tensor 'elements))))
 		tAux)
 		(let ((tAux (make-instance 'vectorClass :size (slot-value tensor 'size))))
-			
+
 			(setf (slot-value tAux 'elements) (factorialList (slot-value tensor 'elements)))
 		tAux)
 ))
