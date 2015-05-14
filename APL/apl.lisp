@@ -11,105 +11,69 @@
 	(if (= n 0) 1
 		(* n (factorial (- n 1)))))
 
-;; TODO!
-(defun print-tensor (tsr)
-	(if (= 1 (array-rank tsr))
-		(format t "")
-	)
-)
-
-;; Tensor (of numbers) and booleans representation
-;; Note: true is 1 and false is 0
-(defun tensor (dim value)
-	(list value))
-
-;;definition of the class tensor and acessor methods
+;;Class definition for tensors, scalars and vectors
 (defclass tensorClass ()
-	((dim :accessor tensor_dim)
-	 (values :type list :initarg :tensor :accessor tensor_values)
+	((elements :type list
+		   :initform '()
+		   :initarg :elements
+		   :accessor elements-slot)
+	  (size :type list
+		:initarg :size
+		:accessor size-slot)
 	)
 )
-(defmethod tensor_dim ((obj tensor))
-  (slot-value obj 'dim))
 
-(defmethod (setf tensor_dim) ((obj tensor) new-value)
-  (setf (slot-value obj 'dim) new-value))
+(defclass scalarClass (tensorClass)
+	((elements :type list
+			:initform '()
+			:initarg :elements)
+	  (size :type list
+			:initform '(1)
+			:initarg :size)
+	)
+)
 
-(defmethod tensor_values ((obj tensor))
-  (slot-value obj 'values))
+(defclass vectorClass (tensorClass)
+	((elements :type list
+		   :initform '()
+		   :initarg :elements)
+	  (size :type list
+			:initform '()
+			:initarg :size)
+	)
+)
 
-(defmethod (setf tensor_values) (new-value (obj tensor)) 
-	(setf (slot-value obj 'tensor_values) new-value))
-
-;; Scalar and vector creation
-;; e.g.: (s 2) prints out 2 and
-;; 		 (v 1 2 3) prints out 1 2 3
 (defun s(scalar)
-	(tensor (list 1) scalar))
+	(make-instance 'scalarClass
+				   :elements (list scalar)))
 
-(defclass scalar(tensor)
-	((dim :accessor tensor_dim
-		  :initform 0)
-	 (values :type integer 
-			 :accessor tensor_values)
+(defun v(&rest vals)
+	(make-instance 'vectorClass
+				   :elements vals
+				   :size (list (list-length vals))))
+
+;; TODO
+(defmethod print-object((obj tensorClass) out)
+	(print-unreadable-object (obj out :type t)
+		(print (elements-slot obj))
 	)
 )
 
-(defun v(&rest values)
-	(tensor (list (list-length values)) values))
+;(defgeneric .- (tensor1 tensor2))
 
-(defclass vector(tensor)
-	((dim :accessor tensor_dim
-		  :initform 1)
-	 (values :type array
-			 :accessor tensor_values)
-	)
-)
+;(defgeneric ./ (tensor1 tensor2))
 
-(defclass matrix(tensor)
-	((dim :accessor tensor_dim
-		  :initform 2)
-	 (values :type array
-			 :accessor tensor_values)
-	)
-)
+(defgeneric catenate (tensor1 tensor2))
 
-(defgeneric .- (&rest values))
-
-(defgeneric ./ (&rest values))
-
-(defgeneric drop (t1 t1))
-
-(defgeneric catenate(t1 t2))
 
 ;;Monadic Functions - functions that receive only one argument
+(defun interval (scalar))
 
-(defun interval (scalar)
-	(let ((tAux (tensor (list scalar) '())))
-		 (dotimes (i (- scalar 1))
-			(setf (aref tAux i)
-				  (+ i 1)))
-	tAux)
-)
+;(defmethod drop ((scalar n) (tensor tsr)))
 
-(defmethod drop ((scalar n) (tensor tsr))
-	(let* ((new-dim (- (array-dimension tsr 0) n))
-			((tAux (tensor (list new-dim) 0))))
-		(if (> n 0)
-			(dotimes (i new-dim)
-				(setf (aref tAux i)
-					  (aref tsr (+ i n))))
-			(dotimes (i new-dim)
-				(setf (aref tAux i)
-					  (aref tsr i))))
-	tAux)
-)
+;(defmethod drop ((tensor1 tensorClass) (tensor2 tensorClass))))
 
-(defmethod drop ((tensor tsr1) (tensor tsr2))
-	(let ((tAux (tensor (list )))))
-)
-
-(defun reshape (dimensions tensor))
+(defun reshape ((tensor1 tensorClass) (tensor2 tensorClass)))
 
 (defun outer-product (func))
 
@@ -117,142 +81,176 @@
 
 (defun fold (func))
 
-(defmethod .- ())
+(defun .- ((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(setf el (* -1 el))
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (.- (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (.- (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
+	tAux)
+)
 
-(defmethod ./ ())
+(defun ./ ((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(setf el (/ 1 el)) ;; VER QUANDO É ZERO
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (./ (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (./ (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
+	tAux)
+)
 
-(defun .! (tensor)
-  (let ((tAux (tensor (array-rank tensor) 0)))
-		(dotimes (i (array-dimension tensor 0))
-			(setf (aref tAux)
-				  (factorial (aref tensor i))))
-	tAux))
+(defun .sin ((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(setf el (sin el))
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (.sin (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (.sin (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
+	tAux)
+)
 
-(defun .sin (tensor)
-	(let ((tAux (tensor (array-rank tensor) 0)))
-		(dotimes (i (array-dimension tensor 0))
-			(setf (aref tAux i)
-				  (sin (aref tensor i))))
-	tAux))
+(defun .cos ((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(setf el (cos el))
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (.cos (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (.cos (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
+	tAux)
+)
 
-(defun .cos (tensor)
-	(let ((tAux (tensor (array-rank tensor) 0)))
-		(dotimes (i (array-dimension tensor 0))
-			(setf (aref tAux i)
-				  (cos (aref tensor i))))
+(defun .!((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(setf el (factorial el))
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (.! (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (.! (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
 	tAux)
 )
 
 ;; The result is a tensor containing, as elements, the integers 0 or 1 if the element of the given tensor is different than or equal to zero
-(defun .not (tensor)
-	(let ((tAux (tensor (array-rank tensor) 0)))
-		(dotimes (i (array-dimension tensor 0))
-			(if (= (aref tensor i) 0)
-				(setf (aref tAux i) 1)
-				(setf (aref tAux i) 0)))
+(defun .not ((obj tensorClass))
+	(let ((tAux (make-instance 'tensorClass :elements (elements-slot obj)))
+			(lAux '()))
+		(if (eql (elements-slot tAux) '())
+			'()
+			(if (not (listp (car (elements-slot tAux))))
+				(progn
+					(dolist (el (elements-slot tAux))
+						(if (= el 0)
+							(setf el 1)
+							(setf el 0)
+						)
+						(setf lAux (append lAux (list el)))
+					)
+					(setf (elements-slot tAux) lAux)
+				)
+				(setf (elements-slot tAux)
+					  (cons (elements-slot (.not (make-instance 'tensorClass
+																:elements (car (elements-slot tAux)))))
+							(elements-slot (.not (make-instance 'tensorClass
+															:elements (cdr (elements-slot tAux)))))))
+			)
+		)
 	tAux)
 )
 
 ;;Dyadic functions - functions that receive two arguments
-(defmethod catenate ((scalar s1) (scalar s2))
-	(v (list s1 s2))
-)
+(defmethod catenate ((scalar1 scalarClass) (scalar2 scalarClass)))
 
-(defmethod catenate ((tensor s1) (tensor s2))
-	(let ((tAux (tensor  (list 0)))))
-)
+(defmethod catenate ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun member? (tensor element))
+(defun member? ((tsr tensorClass) (scl scalarClass)))
 
-(defun select (tensor tensor))
+(defun select ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun scan (tensor tensor))
+(defun scan ((tensor1 tensorClass) (tensor2 tensorClass)))
+
 
 ;;For the following functions the test cases are:
 ;; 1- The tensors have the same size. The auxiliary tensor always has the size of tensor1
 ;; 2- Tensor1 is a scalar, so the auxiliary tensor has the size of tensor2
 ;; 3- Tensor2 is a scalar, so the auxiliary tensor has the size of tensor1
 ;; else an error is returned because the sizes are incompatible
+(defun .+ ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun .+ (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(setf (aref tAux i) (+ (aref tensor1 i) (aref tensor2 i)))) tAux)
-			
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(setf (aref tAux i) (+ tensor1 (aref tensor2 i)))) tAux)
-					
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor1 0))
-						(setf (aref tAux i) (+ tensor2 (aref tensor1 i)))) tAux)))
-	
-		(error "Tensors have incompatible dimensions -- .+"))
-)
+;(defmethod .- ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defmethod .- ())
+;(defmethod ./ ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defmethod ./ ())
+(defun .* ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun .* (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-			(let ((tAux (tensor (array-rank tensor1) 0)))
-				(dotimes (i (array-dimension tensor1 0))
-					(setf (aref tAux i) (* (aref tensor1 i) (aref tensor2 i)))) tAux)
+(defun .// ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-			(if ((= (array-dimension tensor1 0) 1))
-				(let ((tAux (tensor (array-rank tensor2) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(setf (aref tAux i) (* tensor1 (aref tensor2 i)))) tAux)
-
-				(if ((= (array-dimension tensor2 0) 1))
-					(let ((tAux (tensor (array-rank tensor1) 0)))
-						(dotimes (i (array-dimension tensor1 0))
-							(setf (aref tAux i) (* tensor2 (aref tensor1 i)))) tAux)))
-
-		(error "Tensors have incompatible dimensions -- .*"))
-)
-
-(defun .// (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-			(let ((tAux (tensor (array-rank tensor1) 0)))
-				(dotimes (i (array-dimension tensor1 0))
-					(setf (aref tAux i) (// (aref tensor1 i) (aref tensor2 i)))) tAux)
-
-			(if ((= (array-dimension tensor1 0) 1))
-				(let ((tAux (tensor (array-rank tensor2) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(setf (aref tAux i) (// tensor1 (aref tensor2 i)))) tAux)
-
-				(if ((= (array-dimension tensor2 0) 1))
-					(let ((tAux (tensor (array-rank tensor1) 0)))
-						(dotimes (i (array-dimension tensor1 0))
-							(setf (aref tAux i) (// tensor2 (aref tensor1 i)))) tAux)))
-
-		(error "Tensors have incompatible dimensions -- .//"))
-)
-
-(defun .% (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-			(let ((tAux (tensor (array-rank tensor1) 0)))
-				(dotimes (i (array-dimension tensor1 0))
-					(setf (aref tAux i) (% (aref tensor1 i) (aref tensor2 i)))) tAux)
-
-			(if ((= (array-dimension tensor1 0) 1))
-				(let ((tAux (tensor (array-rank tensor2) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(setf (aref tAux i) (% tensor1 (aref tensor2 i)))) tAux)
-
-				(if ((= (array-dimension tensor2 0) 1))
-					(let ((tAux (tensor (array-rank tensor1) 0)))
-						(dotimes (i (array-dimension tensor1 0))
-							(setf (aref tAux i) (% tensor2 (aref tensor1 i)))) tAux)))
-
-		(error "Tensors have incompatible dimensions -- .%"))
-)
+(defun .% ((tensor1 tensorClass) (tensor2 tensorClass)))
 
 ;;For the following functions the test cases are:
 ;; 1- The tensors have the same size. The auxiliary tensor always has the size of tensor1
@@ -262,183 +260,16 @@
 ;; 3- Tensor2 is a scalar, so the auxiliary tensor has the size of tensor1
 ;;		3.1 - for each element of tensor1 a logical operation is performed with tensor2, if T, tAux is filled with 1, otherwise with 0
 ;; else an error is returned because the sizes are incompatible
-(defun .> (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (> (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0))) tAux)
-		
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (> tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0))) tAux)
-			
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (> tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0))) tAux)))
-		
-		(error "Tensors have incompatible dimensions --.>"))
-)
+(defun .> ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun .< (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (< (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0))) tAux)
-		
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (< tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0))) tAux)
-			
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (< tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0))) tAux)))
-		
-		(error "Tensors have incompatible dimensions --.<"))
-)
+(defun .< ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun .>= (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (>= (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0))) tAux)
+(defun .>= ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (>= tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0))) tAux)
+(defun .<= ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (>= tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0))) tAux)))
+(defun .= ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-		(error "Tensors have incompatible dimensions --.>="))
-)
+(defun .or ((tensor1 tensorClass) (tensor2 tensorClass)))
 
-(defun .<= (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (<= (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0)))
-			tAux)
-
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (<= tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0)))
-				tAux)
-
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (<= tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0)))
-					tAux)))
-
-		(error "Tensors have incompatible dimensions --.<="))
-)
-
-(defun .= (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (= (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0)))
-			tAux)
-
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (= tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0)))
-				tAux)
-
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (= tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0)))
-					tAux)))
-
-		(error "Tensors have incompatible dimensions --.="))
-)
-
-(defun .or (tensor1 tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (or (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0))) tAux)
-
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (or tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0))) tAux)
-
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (or tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0))) tAux)))
-
-		(error "Tensors have incompatible dimensions --.or"))
-)
-
-(defun .and (tensor tensor2)
-	(if (= (array-rank tensor1) (array-rank tensor2))
-		(let ((tAux (tensor (array-rank tensor1) 0)))
-			(dotimes (i (array-dimension tensor1 0))
-				(if (and (aref tensor1 i) (aref tensor2 i))
-					(setf (aref tAux i) 1)
-					(setf (aref tAux i) 0))) tAux)
-
-		(if ((= (array-dimension tensor1 0) 1))
-			(let ((tAux (tensor (array-rank tensor2) 0)))
-				(dotimes (i (array-dimension tensor2 0))
-					(if (and tensor1 (aref tensor2 i))
-						(setf (aref tAux i) 1)
-						(setf (aref tAux i) 0))) tAux)
-
-			(if ((= (array-dimension tensor2 0) 1))
-				(let ((tAux (tensor (array-rank tensor1) 0)))
-					(dotimes (i (array-dimension tensor2 0))
-						(if (and tensor2 (aref tensor1 i))
-							(setf (aref tAux i) 1)
-							(setf (aref tAux i) 0))) tAux)))
-
-		(error "Tensors have incompatible dimensions --.and"))
-)
+(defun .and ((tensor1 tensorClass) (tensor2 tensorClass)))

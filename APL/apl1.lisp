@@ -1,13 +1,17 @@
+;; Advanced Programming 2015/2016
+;;
+;; APL - A Programming Language
+;;
+;;Group 26
+;; Diogo Leitao 69644
+;; Diana Ribeiro 70096
+
+;;Auxiliary functions
 (defun factorial (n)
 	(if (= n 0) 1
 		(* n (factorial (- n 1)))))
 
-(dolist (i lst)
-		(setf lAux (append lAux (list (factorial i))))
-lAux)
-
-
-
+;;Class definition for tensors, scalars and vectors
 (defclass tensorClass ()
 	((elements :type list
 		   :initform '()
@@ -49,6 +53,7 @@ lAux)
 				   :elements vals
 				   :size (list (list-length vals))))
 
+;;Monadic Functions - functions that receive only one argument
 
 (defmethod .! ((obj tensor))
 	(let ((iter (make-array (list-length (size-slot tensor))
@@ -74,34 +79,6 @@ lAux)
 )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(defmethod .! ((obj tensor))
-    (if (= 1 (slot-value tensor 'size))
-		(let ((tAux (make-instance 'scalarClass)))
-			(setf (slot-value tAux 'elements) (factorial (first (slot-value tensor 'elements))))
-		tAux)
-		(let ((tAux (make-instance 'vectorClass :size (slot-value tensor 'size))))
-
-			(setf (slot-value tAux 'elements) (factorialList (slot-value tensor 'elements)))
-		tAux)
-))
 
 
 
