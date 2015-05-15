@@ -630,7 +630,6 @@
 		)))
 )
 
-(aref a1 i) - (aref a1 i) * (car (list(floor (aref a1 i) (aref a2 i))))
 
 (defmethod .% ((tensor1 tensorClass) (tensor2 tensorClass))
 	;;tensors have the same size
