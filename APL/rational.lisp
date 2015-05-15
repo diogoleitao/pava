@@ -43,55 +43,18 @@
 				   :size (list (list-length vals))))
 
 (defmethod print-object((obj tensorClass) out)
-	(print-unreadable-object (obj out :type t)
-		(print (elements-slot obj))
+	(if (not (equal (elements-slot obj) '()))
+		(if (not (listp (car (elements-slot obj))))
+			(dolist (el (elements-slot obj))
+				(format out "~D " el))
+			(progn
+				(print-object (make-instance 'tensorClass :elements (car (elements-slot obj))) out)
+				(pprint-newline :mandatory out)
+				(if (not (listp (cdr (elements-slot obj))))
+					(dolist (el (elements-slot obj))
+						(format out "~D " el))
+					(print-object (make-instance 'tensorClass :elements (cdr (elements-slot obj))) out)))
+		)
 	)
 )
-
-(defmethod drop ((n scalarClass) (tsr tensorClass))
-	(let ((lAux '())
-			(tAux (make-instance 'tensorClass)))
-		 (if (equal (elements-slot tsr) '())
-			 '()
-			 (if (not (equal (car (elements-slot tsr)) '()))
-				 (if (not (listp (car (elements-slot tsr))))
-					 (let ((aAux (make-array (list-length (elements-slot tsr)) :initial-contents (elements-slot tsr))))
-						  (if (< (car (elements-slot n)) 0)
-							  (progn
-								  (dotimes (i (- (array-dimension aAux 0) (abs (car (elements-slot n)))))
-										(setf lAux (append lAux (list (aref aAux (+ i (abs (car (elements-slot n)))))))))
-								  (setf (elements-slot tAux) lAux))
-							  (progn
-								  (dotimes (i (- (array-dimension aAux 0) (car (elements-slot n))))
-										(setf lAux (append lAux (list (aref aAux i)))))
-								  (setf (elements-slot tAux) lAux))))
-					 (setf lAux (append lAux (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr)))))))
-				 (setf lAux
-					   (cons (elements-slot (drop n (make-instance 'tensorClass :elements (car (elements-slot tsr)))))
-							 (elements-slot (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr)))))))))
-	tAux)
-)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

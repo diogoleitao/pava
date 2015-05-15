@@ -54,10 +54,19 @@
 				   :elements vals
 				   :size (list (list-length vals))))
 
-;; TODO
 (defmethod print-object((obj tensorClass) out)
-	(print-unreadable-object (obj out :type t)
-		(print (elements-slot obj))
+	(if (not (equal (elements-slot obj) '()))
+		(if (not (listp (car (elements-slot obj))))
+			(dolist (el (elements-slot obj))
+				(format out "~D " el))
+			(progn
+				(print-object (make-instance 'tensorClass :elements (car (elements-slot obj))) out)
+				(pprint-newline :mandatory out)
+				(if (not (listp (cdr (elements-slot obj))))
+					(dolist (el (elements-slot obj))
+						(format out "~D " el))
+					(print-object (make-instance 'tensorClass :elements (cdr (elements-slot obj))) out)))
+		)
 	)
 )
 
@@ -284,17 +293,13 @@
 		 (if (not (equal (car (elements-slot tensor1)) '()))
 			 (if (not (listp (car (elements-slot tensor1))))
 				 (dolist (el (elements-slot tensor1))
-						(setf lAux (append lAux (list el)))
-						(print "t1")
-						(print lAux))
+						(setf lAux (append lAux (list el))))
 				 (setf lAux (append lAux (catenate (make-instance 'tensorClass :elements (car (elements-slot tensor1)))
 												   (make-instance 'tensorClass :elements (cdr (elements-slot tensor1))))))))
 		 (if (not (equal (car (elements-slot tensor2)) '()))
 			 (if (not (listp (car (elements-slot tensor2))))
 				 (dolist (el (elements-slot tensor2))
-						(setf lAux (append lAux (list el)))
-						(print "t2")
-						(print lAux))
+						(setf lAux (append lAux (list el))))
 				 (setf lAux (append lAux (catenate (make-instance 'tensorClass :elements (car (elements-slot tensor2)))
 												   (make-instance 'tensorClass :elements (cdr (elements-slot tensor2))))))))
 	(setf (elements-slot tAux) lAux)
@@ -382,141 +387,141 @@
 		)))
 )
 
-(defmethod .- ((tensor1 tensorClass) (tensor2 tensorClass))
-	;;tensors have the same size
-	(if (equal (size-slot tensor1)
-			   (size-slot tensor2))
-		(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1))))
-			 (if (equal (elements-slot tensor1) '())
-				'()
-				(if (not (and (listp (car (elements-slot tensor1)))
-							  (listp (car (elements-slot tensor2)))))
-					(let ((a1 (make-array (list-length (elements-slot tensor1)) :initial-contents (elements-slot tensor1)))
-							(a2 (make-array (list-length (elements-slot tensor2)) :initial-contents (elements-slot tensor2)))
-								(l1 '()))
-							(dotimes (i (array-dimension a1 0))
-								(setf l1 (append l1 (list (- (aref a1 i) (aref a2 i)))))
-							)
-							(setf (elements-slot tAux) l1))
-					(setf (elements-slot tAux)
-						  (cons (elements-slot (.- (make-instance 'tensorClass
-																  :elements (car (elements-slot tensor1)))
-												   (make-instance 'tensorClass
-																  :elements (car (elements-slot tensor2)))))
-								(elements-slot (.- (make-instance 'tensorClass
-																  :elements (cdr (elements-slot tensor1)))
-												   (make-instance 'tensorClass
-																  :elements (cdr (elements-slot tensor2)))))))
-				)
-			)
-		tAux)
-		;;tensor1 is a scalar
-		(if (equal (size-slot tensor1) '(1))
-			(let ((tAux (make-instance 'tensorClass :size (size-slot tensor2)))
-				(lAux '()))
-			 (if (equal (elements-slot tAux) '())
-				 '()
-				 (if (not(listp (car (elements-slot tensor1))))
-					(progn
-						(dolist (el (elements-slot tensor2))
-							(setf lAux (append lAux (list (- (car (elements-slot tensor1)) el)))))
-						(setf (elements-slot tAux) lAux))
-					(setf (elements-slot tAux)
-						  (cons (elements-slot (.- tensor1 (make-instance 'tensorClass
-																		  :elements (car (elements-slot tensor2)))))
-								(elements-slot (.- tensor1 (make-instance 'tensorClass
-																		  :elements (cdr (elements-slot tensor2)))))))
-				))
-			tAux)
-			;;tensor2 is a scalar
-			(if (equal (size-slot tensor2) '(1))
-				(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1)))
-						(lAux '()))
-					 (if (equal (elements-slot tAux) '())
-						'()
-						(if (not(listp (car (elements-slot tensor2))))
-							(progn
-								(dolist (el (elements-slot tensor1))
-									(setf lAux (append lAux (list (- el (car(elements-slot tensor2)))))))
-								(setf (elements-slot tAux) lAux))
-							(setf (elements-slot tAux)
-								  (cons (elements-slot (.- (make-instance 'tensorClass
-																		  :elements (car (elements-slot tensor1))) tensor2))
-										(elements-slot (.- (make-instance 'tensorClass
-																		  :elements (cdr (elements-slot tensor2))) tensor2))))
-						)
-					)
-				tAux)
-		)))
+ (defmethod .- ((tensor1 tensorClass) (tensor2 tensorClass))
+ 	;;tensors have the same size
+ 	(if (equal (size-slot tensor1)
+ 			   (size-slot tensor2))
+ 		(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1))))
+ 			 (if (equal (elements-slot tensor1) '())
+ 				'()
+ 				(if (not (and (listp (car (elements-slot tensor1)))
+ 							  (listp (car (elements-slot tensor2)))))
+ 					(let ((a1 (make-array (list-length (elements-slot tensor1)) :initial-contents (elements-slot tensor1)))
+ 							(a2 (make-array (list-length (elements-slot tensor2)) :initial-contents (elements-slot tensor2)))
+ 								(l1 '()))
+ 							(dotimes (i (array-dimension a1 0))
+ 								(setf l1 (append l1 (list (- (aref a1 i) (aref a2 i)))))
+ 							)
+ 							(setf (elements-slot tAux) l1))
+ 					(setf (elements-slot tAux)
+					  (cons (elements-slot (.- (make-instance 'tensorClass
+ 																  :elements (car (elements-slot tensor1)))
+ 												   (make-instance 'tensorClass
+ 																  :elements (car (elements-slot tensor2)))))
+ 								(elements-slot (.- (make-instance 'tensorClass
+ 																  :elements (cdr (elements-slot tensor1)))
+ 												   (make-instance 'tensorClass
+ 																  :elements (cdr (elements-slot tensor2)))))))
+ 				)
+ 			)
+ 		tAux)
+ 		;;tensor1 is a scalar
+ 		(if (equal (size-slot tensor1) '(1))
+ 			(let ((tAux (make-instance 'tensorClass :size (size-slot tensor2)))
+ 				(lAux '()))
+ 			 (if (equal (elements-slot tAux) '())
+ 				 '()
+ 				 (if (not(listp (car (elements-slot tensor1))))
+ 					(progn
+ 						(dolist (el (elements-slot tensor2))
+ 							(setf lAux (append lAux (list (- (car (elements-slot tensor1)) el)))))
+ 						(setf (elements-slot tAux) lAux))
+ 					(setf (elements-slot tAux)
+ 						  (cons (elements-slot (.- tensor1 (make-instance 'tensorClass
+ 																		  :elements (car (elements-slot tensor2)))))
+ 								(elements-slot (.- tensor1 (make-instance 'tensorClass
+ 																		  :elements (cdr (elements-slot tensor2)))))))
+ 				))
+ 			tAux)
+ 			;;tensor2 is a scalar
+ 			(if (equal (size-slot tensor2) '(1))
+ 				(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1)))
+ 						(lAux '()))
+ 					 (if (equal (elements-slot tAux) '())
+ 						'()
+ 						(if (not(listp (car (elements-slot tensor2))))
+ 							(progn
+ 								(dolist (el (elements-slot tensor1))
+ 									(setf lAux (append lAux (list (- el (car(elements-slot tensor2)))))))
+ 								(setf (elements-slot tAux) lAux))
+ 							(setf (elements-slot tAux)
+ 								  (cons (elements-slot (.- (make-instance 'tensorClass
+ 																		  :elements (car (elements-slot tensor1))) tensor2))
+ 										(elements-slot (.- (make-instance 'tensorClass
+ 																		  :elements (cdr (elements-slot tensor2))) tensor2))))
+ 						)
+ 					)
+ 				tAux)
+ 		)))
 )
 
-(defmethod ./ ((tensor1 tensorClass) (tensor2 tensorClass))
-	;;tensors have the same size
-	(if (equal (size-slot tensor1)
-			   (size-slot tensor2))
-		(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1))))
-			 (if (equal (elements-slot tensor1) '())
-				'()
-				(if (not (and (listp (car (elements-slot tensor1)))
-							  (listp (car (elements-slot tensor2)))))
-					(let ((a1 (make-array (list-length (elements-slot tensor1)) :initial-contents (elements-slot tensor1)))
-							(a2 (make-array (list-length (elements-slot tensor2)) :initial-contents (elements-slot tensor2)))
-								(l1 '()))
-							(dotimes (i (array-dimension a1 0))
-								(setf l1 (append l1 (list (/ (aref a1 i) (aref a2 i)))))
-							)
-							(setf (elements-slot tAux) l1))
-					(setf (elements-slot tAux)
-						  (cons (elements-slot (./ (make-instance 'tensorClass
-																  :elements (car (elements-slot tensor1)))
-												   (make-instance 'tensorClass
-																  :elements (car (elements-slot tensor2)))))
-								(elements-slot (./ (make-instance 'tensorClass
-																  :elements (cdr (elements-slot tensor1)))
-												   (make-instance 'tensorClass
-																  :elements (cdr (elements-slot tensor2)))))))
-				)
-			)
-		tAux)
-		;;tensor1 is a scalar
-		(if (equal (size-slot tensor1) '(1))
-			(let ((tAux (make-instance 'tensorClass :size (size-slot tensor2)))
-				(lAux '()))
-			 (if (equal (elements-slot tAux) '())
-				 '()
-				 (if (not(listp (car (elements-slot tensor1))))
-					(progn
-						(dolist (el (elements-slot tensor2))
-							(setf lAux (append lAux (list (/ (car (elements-slot tensor1)) el)))))
-						(setf (elements-slot tAux) lAux))
-					(setf (elements-slot tAux)
-						  (cons (elements-slot (./ tensor1 (make-instance 'tensorClass
-																		  :elements (car (elements-slot tensor2)))))
-								(elements-slot (./ tensor1 (make-instance 'tensorClass
-																		  :elements (cdr (elements-slot tensor2)))))))
-				))
-			tAux)
-			;;tensor2 is a scalar
-			(if (equal (size-slot tensor2) '(1))
-				(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1)))
-						(lAux '()))
-					 (if (equal (elements-slot tAux) '())
-						'()
-						(if (not(listp (car (elements-slot tensor2))))
-							(progn
-								(dolist (el (elements-slot tensor1))
-									(setf lAux (append lAux (list (/ el (car(elements-slot tensor2)))))))
-								(setf (elements-slot tAux) lAux))
-							(setf (elements-slot tAux)
-								  (cons (elements-slot (./ (make-instance 'tensorClass
-																		  :elements (car (elements-slot tensor1))) tensor2))
-										(elements-slot (./ (make-instance 'tensorClass
-																		  :elements (cdr (elements-slot tensor2))) tensor2))))
-						)
-					)
-				tAux)
-		)))
-)
+ (defmethod ./ ((tensor1 tensorClass) (tensor2 tensorClass))
+ 	;;tensors have the same size
+ 	(if (equal (size-slot tensor1)
+ 			   (size-slot tensor2))
+ 		(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1))))
+ 			 (if (equal (elements-slot tensor1) '())
+ 				'()
+ 				(if (not (and (listp (car (elements-slot tensor1)))
+ 							  (listp (car (elements-slot tensor2)))))
+ 					(let ((a1 (make-array (list-length (elements-slot tensor1)) :initial-contents (elements-slot tensor1)))
+ 							(a2 (make-array (list-length (elements-slot tensor2)) :initial-contents (elements-slot tensor2)))
+ 								(l1 '()))
+ 							(dotimes (i (array-dimension a1 0))
+ 								(setf l1 (append l1 (list (/ (aref a1 i) (aref a2 i)))))
+ 							)
+ 							(setf (elements-slot tAux) l1))
+ 					(setf (elements-slot tAux)
+ 						  (cons (elements-slot (./ (make-instance 'tensorClass
+ 																  :elements (car (elements-slot tensor1)))
+ 												   (make-instance 'tensorClass
+ 																  :elements (car (elements-slot tensor2)))))
+ 								(elements-slot (./ (make-instance 'tensorClass
+ 																  :elements (cdr (elements-slot tensor1)))
+ 												   (make-instance 'tensorClass
+ 																  :elements (cdr (elements-slot tensor2)))))))
+ 				)
+ 			)
+ 		tAux)
+ 		;;tensor1 is a scalar
+ 		(if (equal (size-slot tensor1) '(1))
+ 			(let ((tAux (make-instance 'tensorClass :size (size-slot tensor2)))
+ 				(lAux '()))
+ 			 (if (equal (elements-slot tAux) '())
+ 				 '()
+ 				 (if (not(listp (car (elements-slot tensor1))))
+ 					(progn
+ 						(dolist (el (elements-slot tensor2))
+ 							(setf lAux (append lAux (list (/ (car (elements-slot tensor1)) el)))))
+ 						(setf (elements-slot tAux) lAux))
+ 					(setf (elements-slot tAux)
+ 						  (cons (elements-slot (./ tensor1 (make-instance 'tensorClass
+ 																		  :elements (car (elements-slot tensor2)))))
+ 								(elements-slot (./ tensor1 (make-instance 'tensorClass
+ 																		  :elements (cdr (elements-slot tensor2)))))))
+ 				))
+ 			tAux)
+ 			;;tensor2 is a scalar
+ 			(if (equal (size-slot tensor2) '(1))
+ 				(let ((tAux (make-instance 'tensorClass :size (size-slot tensor1)))
+ 						(lAux '()))
+ 					 (if (equal (elements-slot tAux) '())
+ 						'()
+ 						(if (not(listp (car (elements-slot tensor2))))
+ 							(progn
+ 								(dolist (el (elements-slot tensor1))
+ 									(setf lAux (append lAux (list (/ el (car(elements-slot tensor2)))))))
+ 								(setf (elements-slot tAux) lAux))
+ 							(setf (elements-slot tAux)
+ 								  (cons (elements-slot (./ (make-instance 'tensorClass
+ 																		  :elements (car (elements-slot tensor1))) tensor2))
+ 										(elements-slot (./ (make-instance 'tensorClass
+ 																		  :elements (cdr (elements-slot tensor2))) tensor2))))
+ 						)
+ 					)
+ 				tAux)
+ 		)))
+ )
 
 (defmethod .* ((tensor1 tensorClass) (tensor2 tensorClass))
 	;;tensors have the same size
