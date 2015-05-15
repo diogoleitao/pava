@@ -65,7 +65,7 @@
 
 (defgeneric ./ (tensorClass))
 
-(defgeneric catenate (tensorClass))
+(defgeneric catenate (tensorClass scalarClass))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -74,41 +74,36 @@
 	(let ((lAux '())
 			(vAux (make-instance 'vectorClass :elements '())))
 		(dotimes (i (- 1 scalar))
-				 (cons (+ 1 i) lAux)
+				(cons (+ 1 i) lAux)
 		)
 		(setf (elements-slot vAux) lAux)
-		vAux
-	)
+	vAux)
 )
 
-(defmethod drop ((scalar n) (tensor tsr))
+(defmethod drop ((n scalarClass) (tsr tensorClass))
 	(let ((lAux '())
 			(tAux (make-instance 'tensorClass)))
-				(if (not (equal (car (elements-slot tsr)) '()))
-					(if (not (listp (car (elements-slot tsr))))
-							(let ((a (make-array (list-length (elements-slot tsr)) :initial-contents (elements-slot tsr)))
+		 (if (not (equal (car (elements-slot tsr)) '()))
+			 (if (not (listp (car (elements-slot tsr))))
+				 (let ((a (make-array (list-length (elements-slot tsr)) :initial-contents (elements-slot tsr))))
+					  (if (< n 0)
+						  (progn
+							  (dotimes (i (- (array-dimension a 0) 1))
+									(setf lAux (append lAux (list(aref a (+ i n)))))
 								)
-										(if (< n 0)
-											(progn
-												(dotimes (i (- (array-dimension a 0) 1))
-													(setf lAux (append lAux (list(aref a (+ i n)))))
-												)
-											(setf (elements-slot tAux) lAux)
-											)
-											(progn
-												(dotimes (i (- (array-dimensions a 0) 1 scalar ))
-													(setf lAux (append lAux (list (aref a i))))
-												)
-											(setf (element-slot tAux) lAux)
-											)
-										)
-								)
-							(setf lAux (append lAux (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr))))))
-							
-					)
-				'()
+							  (setf (elements-slot tAux) lAux))
+						  (progn
+							  (dotimes (i (- (array-dimension a 0) 1 n))
+									(setf lAux (append lAux (list (aref a i)))))
+							  (setf (elements-slot tAux) lAux)
+							)
+						)
 				)
-		tAux)
+				 (setf lAux (append lAux (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr))))))
+			)
+			'()
+		)
+	tAux)
 )
 
 ;;(defmethod drop ((tensor1 tensorClass) (tensor2 tensorClass))))
@@ -288,10 +283,10 @@
 
 (defmethod catenate ((tensor1 tensorClass) (tensor2 tensorClass))
 		(let ((lAux '())
-				(tAux (make-instance tensorClass)))
+				(tAux (make-instance 'tensorClass)))
 					(if (not (equal (car (elements-slot tensor1)) '()))
 							(if(not (listp (car (elements-slot tensor1))))
-									(dolist (el (elements-slot tensor1))		
+									(dolist (el (elements-slot tensor1))
 											(setf lAux (append lAux (list el)))
 									)
 								(setf lAux (append lAux (catenate (make-instance 'tensorClass :elements (car (elements-slot tensor1)))
@@ -633,14 +628,15 @@
 				 (if (not(listp (car (elements-slot tensor1))))
 					(progn
 						(dolist (el (elements-slot tensor2))
-							(setf lAux (append lAux (list (car (list(floor (car (elements-slot tensor1)) el))))))
+							(setf lAux (append lAux (list (car (list(floor (car (elements-slot tensor1)) el)))))))
 						(setf (elements-slot tAux) lAux))
 					(setf (elements-slot tAux)
 						  (cons (elements-slot (.// tensor1 (make-instance 'tensorClass
 																		  :elements (car (elements-slot tensor2)))))
 								(elements-slot (.// tensor1 (make-instance 'tensorClass
 																		  :elements (cdr (elements-slot tensor2)))))))
-				))
+					)
+				)
 			tAux)
 			;;tensor2 is a scalar
 			(if (equal (size-slot tensor2) '(1))
@@ -651,7 +647,7 @@
 						(if (not(listp (car (elements-slot tensor2))))
 							(progn
 								(dolist (el (elements-slot tensor1))
-									(setf lAux (append lAux (list (car (list(floor el (car(elements-slot tensor2))))))))
+									(setf lAux (append lAux (list (car (list(floor el (car(elements-slot tensor2)))))))))
 								(setf (elements-slot tAux) lAux))
 							(setf (elements-slot tAux)
 								  (cons (elements-slot (.// (make-instance 'tensorClass
@@ -663,7 +659,6 @@
 				tAux)
 		)))
 )
-
 
 (defmethod .% ((tensor1 tensorClass) (tensor2 tensorClass))
 	;;tensors have the same size
@@ -696,19 +691,19 @@
 		;;tensor1 is a scalar
 		(if (equal (size-slot tensor1) '(1))
 			(let ((tAux (make-instance 'tensorClass :size (size-slot tensor2)))
-				(lAux '()))
-			 (if (equal (elements-slot tAux) '())
-				 '()
-				 (if (not(listp (car (elements-slot tensor1))))
-					(progn
-						(dolist (el (elements-slot tensor2))
-							(setf lAux (append lAux (list (rem (car (elements-slot tensor1)) el))))
-						(setf (elements-slot tAux) lAux))
-					(setf (elements-slot tAux)
-						  (cons (elements-slot (.% tensor1 (make-instance 'tensorClass
-																		  :elements (car (elements-slot tensor2)))))
-								(elements-slot (.% tensor1 (make-instance 'tensorClass
-																		  :elements (cdr (elements-slot tensor2)))))))
+					(lAux '()))
+				 (if (equal (elements-slot tAux) '())
+						'()
+						(if (not(listp (car (elements-slot tensor1))))
+							(progn
+								(dolist (el (elements-slot tensor2))
+									(setf lAux (append lAux (list (rem (car (elements-slot tensor1)) el)))))
+								(setf (elements-slot tAux) lAux))
+							(setf (elements-slot tAux)
+								  (cons (elements-slot (.% tensor1 (make-instance 'tensorClass
+																				  :elements (car (elements-slot tensor2)))))
+										(elements-slot (.% tensor1 (make-instance 'tensorClass
+																				  :elements (cdr (elements-slot tensor2)))))))
 				))
 			tAux)
 			;;tensor2 is a scalar
@@ -720,7 +715,7 @@
 						(if (not(listp (car (elements-slot tensor2))))
 							(progn
 								(dolist (el (elements-slot tensor1))
-									(setf lAux (append lAux (list (rem el (car (elements-slot tensor2))))))
+									(setf lAux (append lAux (list (rem el (car (elements-slot tensor2)))))))
 								(setf (elements-slot tAux) lAux))
 							(setf (elements-slot tAux)
 								  (cons (elements-slot (.% (make-instance 'tensorClass
@@ -781,14 +776,12 @@
 				 (if (not(listp (car (elements-slot tensor1))))
 					(progn
 						(dolist (el (elements-slot tensor2))
-								(if (> (car (elements-slot tensor1)) el)
-									(setf el 1)
-									(setf el 0)
-								)
+							(if (> (car (elements-slot tensor1)) el)
+								(setf el 1)
+								(setf el 0))
 							(setf lAux (append lAux (list el))))
 
 						(setf (elements-slot tAux) lAux))
-
 					(setf (elements-slot tAux)
 						  (cons (elements-slot (.> tensor1 (make-instance 'tensorClass
 																		  :elements (car (elements-slot tensor2)))))
@@ -807,17 +800,14 @@
 							(dolist (el (elements-slot tensor1))
 								(if (> el (car(elements-slot tensor2)))
 									(setf el 1 )
-									(setf el 0)
-								)
+									(setf el 0))
 								(setf lAux (append lAux (list el))))
-
-						(setf (elements-slot tAux) lAux))
-
-					(setf (elements-slot tAux)
-						(cons (elements-slot (.> (make-instance 'tensorClass
+							(setf (elements-slot tAux) lAux))
+						(setf (elements-slot tAux)
+							(cons (elements-slot (.> (make-instance 'tensorClass
 																	:elements (car (elements-slot tensor1))) tensor2))
-								(elements-slot (.> (make-instance 'tensorClass
-																:elements (cdr (elements-slot tensor2))) tensor2))))
+								  (elements-slot (.> (make-instance 'tensorClass
+																	:elements (cdr (elements-slot tensor2))) tensor2))))
 					))
 				tAux)
 		)))
