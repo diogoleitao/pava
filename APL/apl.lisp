@@ -153,7 +153,10 @@
 			(if (not (listp (car (elements-slot tAux))))
 				(progn
 					(dolist (el (elements-slot tAux))
-						(setf el (/ 1 el)) ;; VER QUANDO É ZERO
+						(if (= el 0)
+							(setf el 0)
+							(setf el (/ 1 el))
+						)
 						(setf lAux (append lAux (list el)))
 					)
 					(setf (elements-slot tAux) lAux)
