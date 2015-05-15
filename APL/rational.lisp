@@ -33,6 +33,10 @@
 	)
 )
 
+(defun s(scalar)
+	(make-instance 'scalarClass
+				   :elements (list scalar)))
+
 (defun v(&rest vals)
 	(make-instance 'vectorClass
 				   :elements vals
@@ -44,58 +48,50 @@
 	)
 )
 
-(defgeneric catenate (tensorClass scalarClass))
-
-(defmethod catenate ((scalar1 scalarClass) (scalar2 scalarClass))
-	(let ((vAux (make-instance 'vectorClass)))
-			(setf (elements-slot vAux)
-				  (append (elements-slot scalar1)
-						  (elements-slot scalar2)))
-		vAux
-	)
+(defmethod drop ((n scalarClass) (tsr tensorClass))
+	(let ((lAux '())
+			(tAux (make-instance 'tensorClass)))
+		 (if (equal (elements-slot tsr) '())
+			 '()
+			 (if (not (equal (car (elements-slot tsr)) '()))
+				 (if (not (listp (car (elements-slot tsr))))
+					 (let ((aAux (make-array (list-length (elements-slot tsr)) :initial-contents (elements-slot tsr))))
+						  (if (< (car (elements-slot n)) 0)
+							  (progn
+								  (dotimes (i (- (array-dimension aAux 0) (abs (car (elements-slot n)))))
+										(setf lAux (append lAux (list (aref aAux (+ i (abs (car (elements-slot n)))))))))
+								  (setf (elements-slot tAux) lAux))
+							  (progn
+								  (dotimes (i (- (array-dimension aAux 0) (car (elements-slot n))))
+										(setf lAux (append lAux (list (aref aAux i)))))
+								  (setf (elements-slot tAux) lAux))))
+					 (setf lAux (append lAux (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr)))))))
+				 (setf lAux
+					   (cons (elements-slot (drop n (make-instance 'tensorClass :elements (car (elements-slot tsr)))))
+							 (elements-slot (drop n (make-instance 'tensorClass :elements (cdr (elements-slot tsr)))))))))
+	tAux)
 )
 
-(defmethod catenate ((tensor1 tensorClass) (tensor2 tensorClass))
-		(let ((lAux '())
-				(tAux (make-instance 'tensorClass)))
-					(if (not (equal (car (elements-slot tensor1)) '()))
-							(if(not (listp (car (elements-slot tensor1))))
-									(dolist (el (elements-slot tensor1))
-											(setf lAux (append lAux (list el)))
-									)
-								(setf lAux (append lAux (catenate (make-instance 'tensorClass :elements (car (elements-slot tensor1)))
-																	  (make-instance 'tensorClass :elements (cdr (elements-slot tensor1))))))
-							)
-						(if (not (equal (car (elements-slot tensor2)) '()))
-							(if (not (listp (car (elements-slot tensor2))))
-									 (dolist (el (elements-slot tensor2))
-											(setf lAux (append lAux (list el)))
-									 )
-								(setf lAux (append lAux (catenate (make-instance 'tensorClass :elements (car (elements-slot tensor2)))
-																	  (make-instance 'tensorClass :elements (cdr (elements-slot tensor2))))))
-							)
-						)
-					)
-		(setf (elements-slot tAux) lAux)
-		tAux)
-)
 
-(defmethod reshape ((tensor1 tensorClass)(tensor2 tensorClass))
-	(let ((tAux (make-instance 'tensorClass :size (elements-slot tensor1)))
-			(nEls 1)
-			(aAux (make-array (car (size-slot tensor2))
-							  :initial-contents (elements-slot tensor2)))
-			(els '()))
-		(dolist (el (elements-slot tensor1))
-			(setf nEls (* el nEls))
-		)
-		(dotimes (i nEls)
-			(setf els (append els (list (aref aAux (mod i (car (size-slot tensor2)))))))
-		)
-		(dolist (el (elements-slot tensor2))
-			(dotimes (i el)
 
-			)
-		)
-	)
-)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
